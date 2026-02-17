@@ -1,0 +1,14 @@
+#!/usr/bin/env python3
+"""
+TriadDev CLI Wrapper
+"""
+import sys
+from pathlib import Path
+
+# Add lib to path
+sys.path.insert(0, str(Path(__file__).parent.parent / "lib"))
+
+from triadev.cli import main
+
+if __name__ == '__main__':
+    sys.exit(main())
