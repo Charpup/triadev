@@ -1,26 +1,13 @@
 ---
 name: triadev
-id: triadev
-description: |
-  TriadDev (三元开发) - Golden Triangle Development Workflow for OpenClaw.
-  Unifies planning-with-files + task-workflow + tdd-sdd-development into seamless workflow.
-author: Galatea
-version: "1.0.0"
-homepage: https://github.com/Charpup/triadev
-user-invocable: true
-metadata:
-  openclaw:
-    os: ["darwin", "linux", "win32"]
-    requires:
-      skills:
-        - planning-with-files >= 2.10.0
-        - task-workflow >= 3.1.0
-        - tdd-sdd-development >= 1.1.0
+description: TriadDev (三元开发) - Golden Triangle Development Workflow for OpenClaw. Unifies planning-with-files + task-workflow + tdd-sdd-development into seamless workflow for complex multi-step projects. Use when starting projects requiring structured planning, task dependency management, and TDD enforcement. Triggers on "triadev", "Golden Triangle", "plan workflow", "task management".
 ---
 
 # TriadDev 🜁 - Golden Triangle Development
 
 > **TriadDev** integrates the "Golden Triangle" of OpenClaw development: **planning-with-files** + **task-workflow** + **tdd-sdd-development**.
+
+**Version:** 1.0.0 | **Author:** Galatea | **Homepage:** https://github.com/Charpup/triadev
 
 ---
 
