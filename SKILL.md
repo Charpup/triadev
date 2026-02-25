@@ -1,248 +1,272 @@
 ---
 name: triadev
-description: TriadDev (三元开发) - Golden Triangle Development Workflow for OpenClaw. Unifies planning-with-files + task-workflow + tdd-sdd-development into seamless workflow for complex multi-step projects. Use when starting projects requiring structured planning, task dependency management, and TDD enforcement. Triggers on "triadev", "Golden Triangle", "plan workflow", "task management".
+description: TriadDev (三元开发) v2.0 - Golden Triangle Development Workflow with OpenSpec-inspired brownfield support and delta specs. Unifies planning-with-files + task-workflow + tdd-sdd-development v2.0 into seamless workflow for complex multi-step projects. Supports greenfield, brownfield, and artifact-based workflows. Use when starting projects requiring structured planning, task dependency management, TDD enforcement, or working with existing codebases. Triggers on "triadev", "Golden Triangle", "plan workflow", "task management", "brownfield", "delta spec".
 ---
 
-# TriadDev 🜁 - Golden Triangle Development
+# TriadDev 🜁 v2.0 - Golden Triangle Development
 
-> **TriadDev** integrates the "Golden Triangle" of OpenClaw development: **planning-with-files** + **task-workflow** + **tdd-sdd-development**.
+**Version:** 2.0.0 | **Author:** Galatea | **Homepage:** https://github.com/Charpup/triadev
 
-**Version:** 1.0.0 | **Author:** Galatea | **Homepage:** https://github.com/Charpup/triadev
+> **TriadDev** integrates the "Golden Triangle" of OpenClaw development: **planning-with-files** + **task-workflow** + **tdd-sdd-development v2.0**.
 
----
+## What's New in v2.0
 
-## Overview
-
-TriadDev (三元开发) provides a unified CLI and orchestration layer for the three essential skills that have proven to deliver **100% success rate** and **7.5x efficiency** in real-world projects.
-
-### The Golden Triangle
-
-```
-     📋 PLANNING
-    (planning-with-files)
-           ↓
-    📊 WORKFLOW ←────→ 🧪 TDD/SDD
-   (task-workflow)   (tdd-sdd-development)
-```
-
-**Workflow:**
-1. **Planning** → Create structured task plans with file-based persistence
-2. **Workflow** → Analyze tasks, resolve dependencies, schedule batches
-3. **TDD/SDD** → Implement with test-driven and spec-driven development
-
----
-
-## When to Use
-
-**Use TriadDev when:**
-- Starting a complex multi-step project
-- Need structured planning before execution
-- Want TDD enforcement from day one
-- Managing tasks with dependencies
-- Tracking progress across sessions
-
-**Skip TriadDev when:**
-- Quick one-off tasks (< 5 minutes)
-- Simple bug fixes
-- Documentation-only changes
-- Already using individual skills directly
-
----
-
-## Installation
-
-### Prerequisites
-
-Ensure dependencies are installed:
+### 🆕 Brownfield Support
+Initialize projects from existing codebases:
 ```bash
-# planning-with-files
-git clone https://github.com/OthmanAdi/planning-with-files.git ~/.openclaw/skills/planning-with-files
-
-# task-workflow
-git clone https://github.com/Charpup/openclaw-task-workflow.git ~/.openclaw/skills/task-workflow
-
-# tdd-sdd-development
-git clone https://github.com/Charpup/openclaw-tdd-sdd-skill.git ~/.openclaw/skills/tdd-sdd-skill
+triadev init-brownfield ./existing-project --name "Legacy Migration"
 ```
 
-### Install TriadDev
-
+### 🆕 Delta Spec Integration
+Track changes to existing systems:
 ```bash
-git clone https://github.com/Charpup/triadev.git ~/.openclaw/skills/triadev
-cd ~/.openclaw/skills/triadev
-./install.sh
+triadev delta --add "new feature" --modify "existing behavior"
 ```
 
-### Verification
-
+### 🆕 Artifact Flow Mode
+OpenSpec-inspired full workflow:
 ```bash
-triadev --version
-# Output: triadev 1.0.0
+triadev init "Complex Feature" --mode artifact
+# Creates: proposal → specs → design → tasks
 ```
 
----
+### 🆕 Archive & Spec Evolution
+Complete changes and track spec history:
+```bash
+triadev archive "feature-name"
+# Merges deltas, moves to archive/, updates main specs
+```
+
+## The Golden Triangle v2.0
+
+```
+        📋 PLANNING
+       (planning-with-files)
+              ↓
+    ┌─────────┴─────────┐
+    ↓                   ↓
+📊 WORKFLOW          🧪 TDD/SDD v2.0
+(task-workflow)    (tdd-sdd-development)
+    │                   │
+    │   ┌───────────┐   │
+    └───┤ Brownfield├───┘
+        │  Support  │
+        └───────────┘
+```
+
+## Workflow Modes
+
+### Mode A: Greenfield (Default) - New Projects
+For building from scratch:
+```bash
+triadev init "My Project" --template web
+triadev plan --objectives "API,Tests,Deploy"
+triadev analyze
+triadev implement --all
+triadev archive
+```
+
+### Mode B: Brownfield (NEW) - Existing Projects
+For working with existing code:
+```bash
+triadev init-brownfield ./existing-project --name "Migration"
+triadev detect-specs  # Auto-generate base specs
+triadev delta --add "new feature"
+triadev implement
+triadev archive
+```
+
+### Mode C: Artifact Flow (NEW) - Complex Projects
+For features needing design docs:
+```bash
+triadev init "Complex Feature" --mode artifact
+triadev propose "Add real-time sync"
+triadev spec  # Create from proposal
+triadev design  # Technical approach
+triadev tasks   # Implementation steps
+triadev implement
+triadev archive
+```
 
 ## Quick Start
 
-### 1. Initialize Project
-
+### Greenfield Project
 ```bash
-triadev init "My Awesome Project" --template web
-cd my-awesome-project
-```
+# Initialize
+triadev init "User Service API" --template api
+cd user-service-api
 
-**Templates:** `web`, `cli`, `api`, `lib`
+# Plan
+triadev plan --objectives "Design schema,Implement CRUD,Add auth,Write tests"
 
-### 2. Create Planning Documents
-
-```bash
-triadev plan --objectives "Build API,Add tests,Deploy"
-```
-
-Creates:
-- `task_plan.md` - Task breakdown with phases
-- `findings.md` - Research and discoveries
-- `progress.md` - Session logs
-
-### 3. Analyze and Schedule
-
-```bash
-triadev analyze
-```
-
-Outputs:
-- Dependency DAG
-- Complexity scores
-- Optimal batch schedule
-
-### 4. Implement with TDD
-
-```bash
-# Implement single task
-triadev implement task-001
-
-# Or implement all pending tasks
-triadev implement --all
-```
-
-Runs full TDD cycle:
-1. Create SPEC.yaml
-2. RED: Write failing tests
-3. GREEN: Implement to pass
-4. REFACTOR: Optimize
-
-### 5. Check Status
-
-```bash
-triadev status --verbose
-```
-
-### 6. Full Workflow (One Command)
-
-```bash
+# Execute everything
 triadev run --from plan
 ```
 
-Executes: plan → analyze → implement → complete
+### Brownfield Project (NEW)
+```bash
+# Initialize from existing code
+triadev init-brownfield ./legacy-app --name "Modernization"
 
----
+# Detect current specs
+triadev detect-specs
+
+# Plan changes
+triadev delta --add "OAuth support" --modify "session handling"
+
+# Execute
+triadev implement --all
+
+# Archive changes
+triadev archive "oauth-migration"
+```
+
+### Artifact Flow (NEW)
+```bash
+# Initialize with full artifacts
+triadev init "Payment System" --mode artifact
+
+# Create proposal
+triadev propose --intent "Add Stripe integration" \
+                --scope "in: payment processing" \
+                --scope "out: tax calculation"
+
+# Generate specs from proposal
+triadev spec --from-proposal
+
+# Create design doc
+triadev design --approach "Webhook-based async processing"
+
+# Create task list
+triadev tasks
+
+# Implement
+triadev implement --all
+
+# Archive
+triadev archive
+```
 
 ## Commands Reference
 
+### Initialization Commands
+
 | Command | Description | Example |
 |---------|-------------|---------|
-| `init` | Initialize new project | `triadev init "Name" --template web` |
-| `plan` | Create planning docs | `triadev plan --objectives "obj1,obj2"` |
-| `analyze` | Analyze and schedule | `triadev analyze` |
-| `implement` | Run TDD workflow | `triadev implement task-001` |
-| `status` | Show project status | `triadev status --verbose` |
-| `run` | Execute full workflow | `triadev run --from analyze` |
+| `init` | Initialize greenfield project | `triadev init "Name" --template web` |
+| `init-brownfield` | Initialize from existing code (NEW) | `triadev init-brownfield ./project` |
+| `propose` | Create proposal.md (artifact mode) | `triadev propose "intent"` |
 
----
+### Planning Commands
+
+| Command | Description | Example |
+|---------|-------------|---------|
+| `plan` | Create planning docs | `triadev plan --objectives "obj1,obj2"` |
+| `detect-specs` | Auto-generate specs from code (NEW) | `triadev detect-specs` |
+| `delta` | Create delta specs (NEW) | `triadev delta --add "feature"` |
+
+### Analysis Commands
+
+| Command | Description | Example |
+|---------|-------------|---------|
+| `analyze` | Analyze and schedule | `triadev analyze` |
+| `spec` | Generate specs (artifact mode) | `triadev spec --from-proposal` |
+| `design` | Create design.md (artifact mode) | `triadev design` |
+| `tasks` | Create tasks.md (artifact mode) | `triadev tasks` |
+
+### Implementation Commands
+
+| Command | Description | Example |
+|---------|-------------|---------|
+| `implement` | Run TDD workflow | `triadev implement task-001` |
+| `run` | Execute full workflow | `triadev run --from plan` |
+
+### Completion Commands (NEW)
+
+| Command | Description | Example |
+|---------|-------------|---------|
+| `archive` | Complete and archive change | `triadev archive "feature"` |
+| `sync` | Merge deltas to main specs | `triadev sync` |
+| `status` | Show project status | `triadev status --verbose` |
 
 ## Project Structure
 
+### Greenfield Structure
 ```
 my-project/
-├── triadev-project.json      # Project config
-├── task_plan.md              # Task planning
-├── findings.md               # Research notes
-├── progress.md               # Session logs
-├── 01_active/                # Current work
-│   ├── tasks/
-│   ├── research/
-│   └── docs/
-├── 02_archive/               # Completed work
-├── 03_deliverables/          # Final outputs
-├── specs/                    # TDD specifications
-└── tests/                    # Test suites
-    ├── unit/
-    ├── integration/
-    └── acceptance/
+├── triadev-project.json
+├── task_plan.md
+├── findings.md
+├── progress.md
+├── SPEC.yaml
+├── src/
+└── tests/
 ```
 
----
+### Brownfield Structure (NEW)
+```
+my-project/
+├── triadev-project.json
+├── task_plan.md
+├── SPEC.yaml              # Base specs (auto-generated)
+├── SPEC-delta.yaml        # Current changes (NEW)
+├── changes/               # Change tracking (NEW)
+│   ├── active/
+│   │   └── oauth-migration/
+│   └── archive/
+│       └── 2026-02-25-oauth-migration/
+├── src/                   # Existing code
+└── tests/
+```
 
-## Architecture
+### Artifact Mode Structure (NEW)
+```
+my-project/
+├── triadev-project.json
+├── task_plan.md
+├── artifacts/             # Current change artifacts
+│   ├── proposal.md
+│   ├── specs/
+│   ├── design.md
+│   └── tasks.md
+├── changes/
+│   └── archive/
+├── SPEC.yaml              # Main specs (source of truth)
+├── src/
+└── tests/
+```
 
-### Unified Orchestration
+## Integration with tdd-sdd-development v2.0
 
+TriadDev v2.0 leverages new tdd-sdd features:
+
+### Brownfield Integration
 ```python
-TriadDevOrchestrator
-├── initialize_project()     # Setup project structure
-├── create_plan()            # planning-with-files
-├── analyze_tasks()          # task-workflow
-├── implement_task()         # tdd-sdd-development
-├── get_status()             # Aggregate status
-└── run_full_workflow()      # Complete pipeline
+# TriadDev calls tdd-sdd v2.0
+tdd_sdd.init_brownfield(project_dir=".")
+tdd_sdd.create_delta_spec(...)
+tdd_sdd.archive_change(...)
 ```
 
-### Data Flow
-
-```
-User Command
-    ↓
-triadev CLI
-    ↓
-Orchestrator
-    ↓
-├─→ planning-with-files → task_plan.md
-├─→ task-workflow       → batches, schedule
-└─→ tdd-sdd-development → specs, tests, impl
-    ↓
-Project Directory
+### Artifact Flow Integration
+```python
+# TriadDev orchestrates artifact creation
+tdd_sdd.init_artifact_flow(skill_name="...")
+tdd_sdd.create_proposal(...)
+tdd_sdd.create_specs_from_proposal()
+tdd_sdd.create_design_doc()
+tdd_sdd.create_task_list()
 ```
 
----
-
-## Real-World Results
-
-Projects developed with TriadDev (Golden Triangle):
-
-| Project | Time | Tasks | Success | Efficiency |
-|---------|------|-------|---------|------------|
-| MCP Migration | 28 min | 6 | 100% | 7.5x |
-| Schema Sync System | 50 min | 8 | 100% | 7.5x |
-| Task-Workflow v3.1.0 | 10 min | 6 | 100% | 7.5x |
-| Auto-Pilot Skill Pack | 30 min | 5 | 100% | - |
-
-**Average: 19 tasks, 100% success rate, 7.5x faster than estimates**
-
----
-
-## Dependencies
-
-TriadDev is built on top of three excellent OpenClaw skills:
-
-| Skill | Purpose | Repository |
-|-------|---------|------------|
-| **planning-with-files** | Manus-style file-based planning | [GitHub →](https://github.com/OthmanAdi/planning-with-files) |
-| **task-workflow** | DAG-based task scheduling with complexity analysis | [GitHub →](https://github.com/Charpup/openclaw-task-workflow) |
-| **tdd-sdd-development** | TDD+SDD dual-pyramid development workflow | [GitHub →](https://github.com/Charpup/openclaw-tdd-sdd-skill) |
-
-**If you need more granular control, use these skills directly.**
-
----
+### Delta Spec in Workflow
+```yaml
+# task_plan.md includes delta spec phases
+## Phase 1: Detect Base Specs (brownfield)
+## Phase 2: Create Delta Specs
+## Phase 3: Generate Tests
+## Phase 4: Implement Changes
+## Phase 5: Archive
+```
 
 ## Configuration
 
@@ -252,140 +276,137 @@ TriadDev is built on top of three excellent OpenClaw skills:
 {
   "name": "My Project",
   "template": "web",
-  "created_at": "2026-02-17T10:00:00",
-  "triadev_version": "1.0.0"
+  "mode": "greenfield",
+  "created_at": "2026-02-25T10:00:00",
+  "triadev_version": "2.0.0",
+  "tdd_sdd_version": "2.0.0"
 }
 ```
 
-### Environment Variables
+### Mode-Specific Config
 
-```bash
-# Optional: Customize behavior
-TRIADEV_TEMPLATE_DIR=~/.config/triadev/templates
-TRIADEV_MAX_BATCH_SIZE=10
+**Brownfield mode:**
+```json
+{
+  "mode": "brownfield",
+  "base_specs_generated": true,
+  "active_changes": ["oauth-migration"]
+}
 ```
 
----
-
-## Troubleshooting
-
-### Command not found
-
-```bash
-# Ensure triadev is in PATH
-export PATH="$HOME/.openclaw/skills/triadev/bin:$PATH"
+**Artifact mode:**
+```json
+{
+  "mode": "artifact",
+  "artifacts": ["proposal", "specs", "design", "tasks"],
+  "current_artifact": "design"
+}
 ```
 
-### Dependency skill not found
+## Real-World Examples
 
+### Example 1: Greenfield API
 ```bash
-# Install missing dependency
-git clone https://github.com/.../skill-name.git ~/.openclaw/skills/skill-name
-```
-
-### Task analysis fails
-
-```bash
-# Check task_plan.md format
-triadev plan --force  # Recreate planning docs
-```
-
----
-
-## API Reference
-
-### Python API
-
-```python
-from triadev import TriadDevOrchestrator
-
-orchestrator = TriadDevOrchestrator(Path("./my-project"))
-
-# Initialize
-config = orchestrator.initialize_project("Name", template="web")
-
-# Planning
-plan = orchestrator.create_plan(objectives=["Build API"])
-
-# Analysis
-schedule = orchestrator.analyze_tasks()
-
-# Implementation
-result = orchestrator.implement_task("task-001")
-
-# Full workflow
-result = orchestrator.run_full_workflow(from_phase="plan")
-```
-
----
-
-## Examples
-
-### Example 1: Web API Project
-
-```bash
-# Initialize
-triadev init "User Service API" --template api
-
-# Plan with objectives
-triadev plan --objectives "Design schema,Implement CRUD,Add auth,Write tests"
-
-# Execute everything
+triadev init "Payment API" --template api
+triadev plan --objectives "Design schema,Implement CRUD,Add Stripe,Write tests"
 triadev run --from plan
 ```
 
-### Example 2: CLI Tool
-
+### Example 2: Brownfield Migration (NEW)
 ```bash
-triadev init "Data Processor" --template cli
-triadev plan
+triadev init-brownfield ./legacy-auth --name "Auth Modernization"
+triadev detect-specs
+triadev delta --add "JWT support" --modify "session storage" --remove "legacy tokens"
 triadev analyze
 triadev implement --all
+triadev archive "auth-modernization"
 ```
 
----
+### Example 3: Complex Feature with Artifacts (NEW)
+```bash
+triadev init "Real-time Sync" --mode artifact
+triadev propose --intent "Add WebSocket sync"
+triadev spec
+triadev design --approach "Event-driven with Redis"
+triadev tasks
+triadev implement task-001
+triadev implement task-002
+triadev verify
+triadev archive
+```
+
+## Migration from v1.x
+
+v1.x projects are **fully compatible** with v2.0:
+
+1. Update `triadev-project.json`:
+   ```json
+   {"triadev_version": "2.0.0"}
+   ```
+
+2. To use brownfield features:
+   ```bash
+   triadev init-brownfield . --name "Current Project"
+   ```
+
+3. To use artifact mode:
+   ```bash
+   triadev config mode artifact
+   ```
+
+No breaking changes - all v1.x commands continue to work.
+
+## Dependencies
+
+TriadDev v2.0 requires:
+
+| Skill | Version | Purpose |
+|-------|---------|---------|
+| planning-with-files | >= 2.10.0 | File-based planning |
+| task-workflow | >= 3.0.0 | DAG scheduling |
+| tdd-sdd-development | >= 2.0.0 | TDD/SDD with delta specs |
+
+## Troubleshooting
+
+### Brownfield Detection Fails
+```bash
+# Manual spec generation
+triadev detect-specs --manual
+```
+
+### Delta Spec Conflicts
+```bash
+# Check for conflicts before archive
+triadev check-conflicts
+```
+
+### Artifact Mode Issues
+```bash
+# Reset to standard mode
+triadev config mode greenfield
+```
 
 ## Roadmap
 
-- [ ] Web UI for visual workflow management
-- [ ] Additional project templates (ml, mobile, etc.)
+- [x] Brownfield support (v2.0)
+- [x] Delta specs (v2.0)
+- [x] Artifact flow (v2.0)
+- [ ] Web UI for visual workflow
 - [ ] CI/CD pipeline integration
 - [ ] Multi-agent collaborative projects
-- [ ] Export to popular PM tools (Jira, Linear)
-
----
-
-## Contributing
-
-Contributions welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md).
-
----
-
-## License
-
-MIT License - See [LICENSE](LICENSE)
-
----
 
 ## Acknowledgments
 
+- **OpenSpec** - Inspiration for delta specs and artifact flow
 - **planning-with-files** by OthmanAdi
-- **task-workflow** - DAG scheduling and complexity analysis
-- **tdd-sdd-development** - TDD+SDD workflow
+- **task-workflow** - DAG scheduling
+- **tdd-sdd-development v2.0** - Enhanced TDD/SDD
 - **Charpup** - Project sponsor
 - **Galatea** 🜁 - TriadDev architect
 
 ---
 
-## Links
-
-- **GitHub:** https://github.com/Charpup/triadev
-- **Issues:** https://github.com/Charpup/triadev/issues
-- **Documentation:** This file
-
----
-
-**Start building with the Golden Triangle today!** 🚀
+**Build with the Golden Triangle v2.0!** 🚀
 
 ```bash
 git clone https://github.com/Charpup/triadev.git ~/.openclaw/skills/triadev
