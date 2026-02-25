@@ -1,0 +1,51 @@
+{
+  "skill_name": "triadev",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Start a new project called 'payment-gateway' using triadev. I need to design the schema, implement Stripe integration, write tests, and deploy to production.",
+      "expected_output": "Runs 'triadev init payment-gateway --template api', creates triadev-project.json, task_plan.md, findings.md, progress.md, SPEC.yaml stub. Optionally runs triadev plan with the listed objectives.",
+      "assertions": [
+        {
+          "text": "Invokes triadev init",
+          "type": "contains_any",
+          "values": ["triadev init", "init", "payment-gateway", "triadev-project.json"]
+        },
+        {
+          "text": "Golden Triangle is initialized (all three components)",
+          "type": "llm_judge",
+          "criteria": "The response initializes planning-with-files (task_plan.md), task-workflow scheduling, and tdd-sdd-development (SPEC.yaml) as part of the Golden Triangle."
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I have an existing legacy e-commerce app at ~/projects/legacy-shop. Initialize triadev for brownfield development to modernize its checkout flow.",
+      "expected_output": "Runs 'triadev init-brownfield ~/projects/legacy-shop --name legacy-shop-modernization', detects existing code, generates base SPEC.yaml, prepares delta spec workflow for the checkout changes.",
+      "assertions": [
+        {
+          "text": "Uses brownfield initialization",
+          "type": "contains_any",
+          "values": ["init-brownfield", "brownfield", "detect-specs", "legacy"]
+        },
+        {
+          "text": "Base specs are generated from existing code",
+          "type": "llm_judge",
+          "criteria": "The response includes a step to detect or auto-generate base specs from the existing codebase before proposing changes."
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Change the button color from blue to green in my React component.",
+      "expected_output": "Simple single-file CSS/style change. Skill should NOT trigger — no project orchestration needed.",
+      "assertions": [
+        {
+          "text": "Does not invoke full triadev workflow for trivial UI change",
+          "type": "llm_judge",
+          "criteria": "The response makes the color change directly without initializing triadev project structure, SPEC.yaml, or task scheduling."
+        }
+      ]
+    }
+  ]
+}
