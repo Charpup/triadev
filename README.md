@@ -2,7 +2,7 @@
 
 **The Golden Triangle of OpenClaw Development**
 
-[![Version](https://img.shields.io/badge/version-2.1.0-blue.svg)](https://github.com/Charpup/triadev/releases/tag/v2.1.0)
+[![Version](https://img.shields.io/badge/version-3.0.0-blue.svg)](https://github.com/Charpup/triadev/releases/tag/v2.1.0)
 [![OpenClaw Skill](https://img.shields.io/badge/OpenClaw-Skill-4CAF50.svg)](https://openclaw.ai)
 [![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://python.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -17,7 +17,7 @@
 ```yaml
 # Skill identity (SKILL.md frontmatter)
 name: triadev
-version: "2.1.0"
+version: "3.0.0"
 triggers:
   - "triadev"
   - "Golden Triangle"
