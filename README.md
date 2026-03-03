@@ -7,6 +7,7 @@
 [![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://python.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![evals](https://img.shields.io/badge/evals-3%20cases-blueviolet.svg)](evals/evals.json)
+[![Oathe Security](https://img.shields.io/badge/Oathe-92%2F100%20SAFE-brightgreen.svg)](https://oathe.ai/report/Charpup/triadev)
 
 > **TriadDev** (三元开发) unifies the three essential OpenClaw skills — **planning-with-files** + **task-workflow** + **tdd-sdd-development v2.0** — into a single orchestrated workflow for both new and existing projects.
 
@@ -228,6 +229,7 @@ triadev --version
 ## Evals
 
 Test cases in [`evals/evals.json`](evals/evals.json):
+[![Oathe Security](https://img.shields.io/badge/Oathe-92%2F100%20SAFE-brightgreen.svg)](https://oathe.ai/report/Charpup/triadev)
 
 | ID | Scenario | Expected Trigger |
 |----|----------|-----------------|
