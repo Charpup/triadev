@@ -321,3 +321,6 @@ git clone --recursive https://github.com/Charpup/triadev.git ~/.openclaw/skills/
 ~/.openclaw/skills/triadev/install.sh
 triadev init "My Project" && triadev run
 ```
+
+## Changelog
+- 2026-03-11: Skill audit upgrade — normalized SKILL.md frontmatter to `name` + `description`, revalidated trigger wording, and rechecked lightweight lint/smoke compatibility with OpenClaw.

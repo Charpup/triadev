@@ -1,18 +1,11 @@
 ---
 name: triadev
-description: TriadDev (三元开发) v2.0 - Golden Triangle Development Workflow with OpenSpec-inspired brownfield support and delta specs. Unifies planning-with-files + task-workflow + tdd-sdd-development v2.0 into seamless workflow for complex multi-step projects. Supports greenfield, brownfield, and artifact-based workflows. Use when starting projects requiring structured planning, task dependency management, TDD enforcement, or working with existing codebases. Triggers on "triadev", "Golden Triangle", "plan workflow", "task management", "brownfield", "delta spec".
-metadata:
-  openclaw:
-    emoji: "🜁"
-    requires:
-      bins: ["python3", "triadev"]
-      env: []
-    os: ["linux", "macos"]
-    install:
-      - id: "triadev-install"
-        kind: "shell"
-        command: "bash ~/.openclaw/skills/triadev/install.sh"
-        label: "Install TriadDev and add to PATH"
+description: >-
+  TRIGGER: triadev, Golden Triangle, 三元开发, TriadDev, brownfield workflow, delta spec, OpenSpec.
+  TriadDev v2.0 - Golden Triangle Development Workflow unifying planning-with-files + task-workflow +
+  tdd-sdd-development v2.0. Use for: multi-step projects needing structured planning, task dependency
+  management, TDD enforcement, greenfield/brownfield/artifact-based workflows.
+  NOT for: simple one-off tasks, single-file edits, or generic "plan" requests.
 ---
 
 # TriadDev 🜁 v2.0 - Golden Triangle Development
