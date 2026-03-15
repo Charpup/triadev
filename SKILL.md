@@ -2,19 +2,58 @@
 name: triadev
 description: >-
   TRIGGER: triadev, Golden Triangle, 三元开发, TriadDev, brownfield workflow, delta spec, OpenSpec.
-  TriadDev v2.0 - Golden Triangle Development Workflow unifying planning-with-files + task-workflow +
-  tdd-sdd-development v2.0. Use for: multi-step projects needing structured planning, task dependency
-  management, TDD enforcement, greenfield/brownfield/artifact-based workflows.
-  NOT for: simple one-off tasks, single-file edits, or generic "plan" requests.
+  TriadDev v2.1 uses Hybrid A-first progressive routing: default Core path for non-dev multi-step work
+  (planning, research, orchestration, DAG tracking) and Extended path for coding intents (implementation,
+  tests, spec/delta changes). Extended path requires value-first-gate review before TDD/SDD execution.
+  Use for structured multi-step projects; NOT for simple one-off edits.
 ---
 
-# TriadDev 🜁 v2.0 - Golden Triangle Development
+# TriadDev 🜁 v2.1 - Golden Triangle Development
 
-**Version:** 2.0.0 | **Author:** Galatea | **Homepage:** https://github.com/Charpup/triadev
+**Version:** 2.1.0 | **Author:** Galatea | **Homepage:** https://github.com/Charpup/triadev
 
-> **TriadDev** integrates the "Golden Triangle" of OpenClaw development: **planning-with-files** + **task-workflow** + **tdd-sdd-development v2.0**.
+> **TriadDev** now uses a Hybrid A-first route: default **Core path** for non-dev orchestration, and escalated **Extended path** for coding with value + quality gates.
 
-## What's New in v2.0
+## Quick Route (Core vs Extended)
+
+Use this at the start of every TriadDev task:
+
+| Intent | Route | Stack |
+|---|---|---|
+| Planning / research / orchestration / progress tracking (non-dev) | **Core (default)** | `planning-with-files` + `task-workflow` |
+| Implementation / refactor / tests / SPEC changes / skill coding | **Extended** | `planning-with-files` + `task-workflow` + `value-first-gate` + `tdd-sdd-development` |
+
+### Route Notice (must be explicit)
+- If no coding intent is explicit, route to **Core**.
+- If coding intent appears, escalate to **Extended** and announce why.
+
+```text
+Route Notice:
+- Routed to Core: no implementation/spec/test change requested.
+- Routed to Extended: implementation/spec/test intent detected.
+```
+
+### Extended Path Gate Rule
+Before entering TDD/SDD, run **Value-First Gate** and require verdict:
+- `GO` → continue to TDD/SDD
+- `REVISE` / `NO-GO` → hold implementation, return to planning/validation
+
+### Compatibility Guarantee
+Legacy TriadDev triggers and command examples remain valid (`triadev`, `Golden Triangle`, `三元开发`, brownfield, delta spec, OpenSpec).
+
+### skill-creator Usage Boundary (Important)
+`skill-creator` is **not** a core TriadDev dependency. Use it as an external specialist helper only when skill artifacts are in scope.
+
+Invoke `skill-creator` only if:
+- creating a new skill
+- editing/auditing `SKILL.md`
+- restructuring skill folders (`scripts/`, `references/`, `assets/`)
+
+Recommended handoff contract:
+- **Input:** intent, scope, examples, constraints, acceptance criteria
+- **Output:** changes summary, trigger spec, resource map, validation status, next actions
+
+## What's New in v2.1
 
 ### 🆕 Brownfield Support
 Initialize projects from existing codebases:
@@ -42,22 +81,23 @@ triadev archive "feature-name"
 # Merges deltas, moves to archive/, updates main specs
 ```
 
-## The Golden Triangle v2.0
+## The Golden Triangle v2.1
 
 ```
         📋 PLANNING
        (planning-with-files)
               ↓
-    ┌─────────┴─────────┐
-    ↓                   ↓
-📊 WORKFLOW          🧪 TDD/SDD v2.0
-(task-workflow)    (tdd-sdd-development)
-    │                   │
-    │   ┌───────────┐   │
-    └───┤ Brownfield├───┘
-        │  Support  │
-        └───────────┘
+        📊 WORKFLOW
+       (task-workflow)
+              ↓
+     🚦 VALUE-FIRST GATE
+      (value-first-gate)
+              ↓ (GO only)
+         🧪 TDD/SDD
+     (tdd-sdd-development)
 ```
+
+For non-dev tasks, stop at Planning + Workflow (Core path).
 
 ## Workflow Modes
 
@@ -95,7 +135,17 @@ triadev archive
 
 ## Quick Start
 
-### Greenfield Project
+### Core Path (Non-dev default)
+```bash
+# Initialize structured planning
+triadev init "Ops Project" --template workflow
+triadev plan --objectives "Research,Dependency DAG,Execution tracking"
+triadev analyze
+# Execute orchestration tasks (no coding gates)
+triadev run --from plan
+```
+
+### Greenfield Project (Extended path)
 ```bash
 # Initialize
 triadev init "User Service API" --template api
@@ -183,8 +233,10 @@ triadev archive
 
 | Command | Description | Example |
 |---------|-------------|---------|
-| `implement` | Run TDD workflow | `triadev implement task-001` |
+| `implement` | Run TDD workflow (Extended path) | `triadev implement task-001` |
 | `run` | Execute full workflow | `triadev run --from plan` |
+
+> Extended path rule: run Value-First Gate before `implement`; proceed only when verdict is `GO`.
 
 ### Completion Commands (NEW)
 
