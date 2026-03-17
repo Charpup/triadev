@@ -4,6 +4,8 @@ import sys
 from pathlib import Path
 
 TRIADEV_HOME = Path.home() / ".openclaw" / "skills" / "triadev"
+if not TRIADEV_HOME.exists():
+    TRIADEV_HOME = Path.home() / ".codex" / "skills" / "triadev-core"
 sys.path.insert(0, str(TRIADEV_HOME / "lib"))
 
 from triadev.cli import main

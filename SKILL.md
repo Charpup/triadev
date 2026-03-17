@@ -27,6 +27,16 @@ Use this at the start of every TriadDev task:
 - If no coding intent is explicit, route to **Core**.
 - If coding intent appears, escalate to **Extended** and announce why.
 
+### Runtime Contract (This Local Build)
+
+This implementation currently covers only the following guaranteed flow:
+
+- Core route: `init -> plan -> workflow` and `status`.
+- Extended route: `init` with `--route extended`, then `plan -> workflow -> value-gate -> implement`.
+- `run` follows the same phase order from `plan`/`workflow`/`value-gate`/`implement`.
+- `plan --route` and `run --route` control the route; no brownfield, artifact, delta, archive, or proposal-only workflows are implemented in runtime yet.
+- Implementation is blocked when value gate result is `REVISE` or `NO-GO`.
+
 ```text
 Route Notice:
 - Routed to Core: no implementation/spec/test change requested.
@@ -37,6 +47,12 @@ Route Notice:
 Before entering TDD/SDD, run **Value-First Gate** and require verdict:
 - `GO` → continue to TDD/SDD
 - `REVISE` / `NO-GO` → hold implementation, return to planning/validation
+
+Gate implementation details in this build:
+
+- `run` and `implement` read `.triadev/state.json`.
+- Single-gate policy: one effective `GO` is required per workflow execution context.
+- Block reasons are persisted and surfaced via `status` and command output.
 
 ### Compatibility Guarantee
 Legacy TriadDev triggers and command examples remain valid (`triadev`, `Golden Triangle`, `三元开发`, brownfield, delta spec, OpenSpec).
