@@ -273,17 +273,25 @@ class TriadDevOrchestrator:
 
     def _run_planning_script(self, cfg: ProjectConfig):
         skill = self._home_skill(PLANNING_TOOL)
-        script = None
-        for candidate in [skill / "scripts" / "init-session.ps1", skill / "scripts" / "init-session.sh"]:
-            if candidate.exists():
-                script = candidate
-                break
-        if not script:
-            return
-        if script.suffix.lower() == ".ps1":
-            subprocess.run(["powershell", "-ExecutionPolicy", "Bypass", "-File", str(script), cfg.name], cwd=self.project_path, check=False)
-        else:
-            subprocess.run(["bash", str(script), cfg.name], cwd=self.project_path, check=False)
+        ps_script = skill / "scripts" / "init-session.ps1"
+        sh_script = skill / "scripts" / "init-session.sh"
+
+        # Prefer PowerShell when available (Windows + pwsh environments).
+        if ps_script.exists():
+            ps_exe = shutil.which("pwsh") or shutil.which("powershell")
+            if ps_exe:
+                subprocess.run(
+                    [ps_exe, "-ExecutionPolicy", "Bypass", "-File", str(ps_script), cfg.name],
+                    cwd=self.project_path,
+                    check=False,
+                )
+                return
+
+        # Linux/Unix fallback when PowerShell is unavailable.
+        if sh_script.exists():
+            shell_exe = shutil.which("bash") or shutil.which("sh")
+            if shell_exe:
+                subprocess.run([shell_exe, str(sh_script), cfg.name], cwd=self.project_path, check=False)
 
     def create_plan(self, objectives: List[str] = None) -> PlanningResult:
         cfg = self._ensure_config()
