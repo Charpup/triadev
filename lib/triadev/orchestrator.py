@@ -1,6 +1,6 @@
 """
 TriadDev Orchestrator - Core orchestration module
-Integrates planning-with-files + task-workflow + value-first-gate + tdd-sdd-development.
+Integrates planning-with-files + task-workflow + tdd-sdd-development.
 """
 
 import importlib
@@ -19,6 +19,14 @@ WORKFLOW_TOOL = "task-workflow"
 VALUE_GATE_TOOL = "value-first-gate"
 TDD_TOOL = "tdd-sdd-development"
 
+STACK_COMPONENTS = {
+    "triadev": "triadev",
+    "planning-with-files": "planning-with-files",
+    "task-workflow": "task-workflow",
+    "tdd-sdd-development": "tdd-sdd-skill",
+    "value-first-gate": "value-first-gate",
+}
+
 
 @dataclass
 class ProjectConfig:
@@ -26,6 +34,7 @@ class ProjectConfig:
     path: Path
     template: str
     mode: str = "core"
+    value_gate_mode: str = "advisory"
     created_at: datetime = field(default_factory=datetime.now)
 
 
@@ -68,6 +77,7 @@ class ProjectStatus:
     name: str
     current_phase: str
     route: str
+    value_gate_mode: str
     total_tasks: int
     completed_tasks: int
     pending_tasks: int
@@ -83,6 +93,7 @@ class TriadDevOrchestrator:
         self.config_path = self.project_path / "triadev-project.json"
         self.state_path = self.project_path / ".triadev" / "state.json"
         self.workflow_path = self.project_path / ".triadev" / "workflow.json"
+        self.gate_audit_path = self.project_path / ".triadev" / "value-gate-audit.jsonl"
         self._route = "core"
         self._config: Optional[ProjectConfig] = None
 
@@ -95,6 +106,18 @@ class TriadDevOrchestrator:
             return openclaw
         return Path.home() / ".gemini" / "antigravity" / "skills" / skill_name
 
+    def _stack_skill_path(self, repo_dir_name: str) -> Path:
+        return Path.home() / ".openclaw" / "skills" / repo_dir_name
+
+    def _read_manifest(self, repo_dir_name: str) -> Dict[str, Any]:
+        manifest = self._stack_skill_path(repo_dir_name) / "contracts" / "stack-handshake.json"
+        if not manifest.exists():
+            return {"exists": False, "path": str(manifest)}
+        try:
+            return json.loads(manifest.read_text(encoding="utf-8"))
+        except Exception as err:
+            return {"exists": True, "path": str(manifest), "error": str(err)}
+
     def _resolve_project(self):
         for candidate in [self.project_path, *list(self.project_path.parents)]:
             found = candidate / "triadev-project.json"
@@ -103,6 +126,7 @@ class TriadDevOrchestrator:
                 self.config_path = found
                 self.state_path = candidate / ".triadev" / "state.json"
                 self.workflow_path = candidate / ".triadev" / "workflow.json"
+                self.gate_audit_path = candidate / ".triadev" / "value-gate-audit.jsonl"
                 return
 
     def _load_config(self) -> Optional[ProjectConfig]:
@@ -118,6 +142,7 @@ class TriadDevOrchestrator:
             path=self.project_path,
             template=raw.get("template", "lib"),
             mode=raw.get("mode", "core"),
+            value_gate_mode=raw.get("value_gate_mode", "advisory"),
             created_at=datetime.fromisoformat(raw["created_at"]),
         )
         self._config = cfg
@@ -129,44 +154,54 @@ class TriadDevOrchestrator:
             "name": cfg.name,
             "template": cfg.template,
             "mode": cfg.mode,
+            "value_gate_mode": cfg.value_gate_mode,
             "created_at": cfg.created_at.isoformat(),
         }
         with open(self.config_path, "w", encoding="utf-8") as f:
             json.dump(payload, f, indent=2, ensure_ascii=False)
         self._config = cfg
 
+    def _default_value_gate_state(self, mode: str = "advisory") -> Dict[str, Any]:
+        return {
+            "mode": mode,
+            "state": "not_run",
+            "verdict": None,
+            "score": None,
+            "confidence": None,
+            "attempts": 0,
+            "review_file": None,
+            "last_checked_at": None,
+            "last_bypass": None,
+        }
+
     def _load_state(self) -> Dict[str, Any]:
         if self.state_path.exists():
             try:
                 with open(self.state_path, "r", encoding="utf-8") as f:
-                    return json.load(f)
+                    state = json.load(f)
+                if "value_gate" not in state:
+                    state["value_gate"] = self._default_value_gate_state(mode="advisory")
+                else:
+                    state["value_gate"].setdefault("mode", "advisory")
+                    state["value_gate"].setdefault("state", "not_run")
+                    state["value_gate"].setdefault("attempts", 0)
+                    state["value_gate"].setdefault("last_bypass", None)
+                return state
             except Exception:
                 pass
-        return {
-            "route": self._route,
-            "phase": "init",
-            "value_gate": {
-                "state": "not_required",
-                "verdict": None,
-                "score": None,
-                "confidence": None,
-                "attempts": 0,
-                "review_file": None,
-            },
-            "implemented_tasks": [],
-            "workflow_built_at": None,
-            "last_phase": None,
-            "artifact_stage": "none",
-            "brownfield": {"source_path": None, "base_spec_generated": False},
-            "active_change_id": None,
-            "artifact_change_id": None,
-        }
+        return self._default_state()
 
     def _save_state(self, state: Dict[str, Any]):
         self.state_path.parent.mkdir(parents=True, exist_ok=True)
         state["updated_at"] = datetime.now().isoformat()
         with open(self.state_path, "w", encoding="utf-8") as f:
             json.dump(state, f, indent=2, ensure_ascii=False)
+
+    def _append_gate_audit(self, event: Dict[str, Any]):
+        self.gate_audit_path.parent.mkdir(parents=True, exist_ok=True)
+        payload = {"ts": datetime.now().isoformat(), **event}
+        with open(self.gate_audit_path, "a", encoding="utf-8") as f:
+            f.write(json.dumps(payload, ensure_ascii=False) + "\n")
 
     def _ensure_config(self) -> ProjectConfig:
         cfg = self._load_config()
@@ -182,6 +217,18 @@ class TriadDevOrchestrator:
         state = self._load_state()
         state["route"] = route
         self._save_state(state)
+
+    def set_value_gate_mode(self, mode: str):
+        if mode not in {"disabled", "advisory", "enforced"}:
+            raise RuntimeError(f"invalid gate mode: {mode}")
+        cfg = self._ensure_config()
+        cfg.value_gate_mode = mode
+        self._save_config(cfg)
+        state = self._load_state()
+        state.setdefault("value_gate", self._default_value_gate_state(mode=mode))
+        state["value_gate"]["mode"] = mode
+        self._save_state(state)
+        self._append_gate_audit({"event": "mode-change", "mode": mode})
 
     def _set_phase(self, phase: str):
         state = self._load_state()
@@ -206,14 +253,7 @@ class TriadDevOrchestrator:
         return {
             "route": self._route,
             "phase": "init",
-            "value_gate": {
-                "state": "not_required",
-                "verdict": None,
-                "score": None,
-                "confidence": None,
-                "attempts": 0,
-                "review_file": None,
-            },
+            "value_gate": self._default_value_gate_state(mode="advisory"),
             "implemented_tasks": [],
             "workflow_built_at": None,
             "last_phase": None,
@@ -236,15 +276,19 @@ class TriadDevOrchestrator:
         self.config_path = project_dir / "triadev-project.json"
         self.state_path = project_dir / ".triadev" / "state.json"
         self.workflow_path = project_dir / ".triadev" / "workflow.json"
+        self.gate_audit_path = project_dir / ".triadev" / "value-gate-audit.jsonl"
 
-        cfg = ProjectConfig(name=project_dir.name, path=project_dir, template=template, mode=route)
+        cfg = ProjectConfig(name=project_dir.name, path=project_dir, template=template, mode=route, value_gate_mode="advisory")
         self._route = route
         self._save_config(cfg)
         state = self._default_state()
         state["route"] = route
+        state["value_gate"]["mode"] = "advisory"
         self._save_state(state)
+        self._append_gate_audit({"event": "init", "mode": "advisory"})
         self._init_structure(project_dir)
         return cfg
+
     def init_brownfield_project(self, source_path: str, name: Optional[str] = None) -> ProjectConfig:
         project_dir = Path(source_path).expanduser().resolve()
         if not project_dir.exists():
@@ -256,14 +300,17 @@ class TriadDevOrchestrator:
         self.config_path = project_dir / "triadev-project.json"
         self.state_path = project_dir / ".triadev" / "state.json"
         self.workflow_path = project_dir / ".triadev" / "workflow.json"
+        self.gate_audit_path = project_dir / ".triadev" / "value-gate-audit.jsonl"
 
-        cfg = ProjectConfig(name=name or project_dir.name, path=project_dir, template="brownfield", mode="extended")
+        cfg = ProjectConfig(name=name or project_dir.name, path=project_dir, template="brownfield", mode="extended", value_gate_mode="advisory")
         self._route = "extended"
         self._save_config(cfg)
         state = self._default_state()
         state["route"] = "extended"
         state["brownfield"]["source_path"] = str(project_dir)
+        state["value_gate"]["mode"] = "advisory"
         self._save_state(state)
+        self._append_gate_audit({"event": "init-brownfield", "mode": "advisory"})
         self._init_structure(project_dir)
         return cfg
 
@@ -276,7 +323,6 @@ class TriadDevOrchestrator:
         ps_script = skill / "scripts" / "init-session.ps1"
         sh_script = skill / "scripts" / "init-session.sh"
 
-        # Prefer PowerShell when available (Windows + pwsh environments).
         if ps_script.exists():
             ps_exe = shutil.which("pwsh") or shutil.which("powershell")
             if ps_exe:
@@ -287,7 +333,6 @@ class TriadDevOrchestrator:
                 )
                 return
 
-        # Linux/Unix fallback when PowerShell is unavailable.
         if sh_script.exists():
             shell_exe = shutil.which("bash") or shutil.which("sh")
             if shell_exe:
@@ -400,8 +445,6 @@ class TriadDevOrchestrator:
             json.dump(payload, f, indent=2, ensure_ascii=False)
 
         state = self._load_state()
-        if self._route == "core":
-            state["value_gate"]["state"] = "passed"
         state["workflow_built_at"] = payload["generated_at"]
         self._save_state(state)
         self._set_phase("workflow")
@@ -425,64 +468,106 @@ class TriadDevOrchestrator:
         return "REVISE", total, "Medium"
 
     def run_value_gate(self, force: bool = False) -> dict:
-        self._ensure_config()
         state = self._load_state()
-
-        if self._route == "core":
-            state["value_gate"] = {
-                "state": "passed",
-                "verdict": "GO",
-                "score": 30,
-                "confidence": "High",
-                "review_file": None,
-                "attempts": state["value_gate"].get("attempts", 0),
+        mode = state.get("value_gate", {}).get("mode", "advisory")
+        gate = state.get("value_gate", {})
+        if gate.get("verdict") and not force:
+            return {
+                "success": gate.get("verdict") == "GO",
+                "verdict": gate.get("verdict"),
+                "score": gate.get("score"),
+                "confidence": gate.get("confidence"),
+                "review_file": gate.get("review_file"),
+                "mode": mode,
+                "cached": True,
             }
-            self._save_state(state)
-            self._set_phase("value-gate")
-            return {"success": True, "verdict": "GO", "score": 30, "confidence": "High", "review_file": None}
 
-        if not force and state["value_gate"].get("state") == "passed":
-            return {"success": True, **state["value_gate"], "review_file": state["value_gate"].get("review_file")}
-
-        plan_file = self.project_path / "task_plan.md"
-        plan_text = plan_file.read_text(encoding="utf-8", errors="ignore") if plan_file.exists() else ""
-        tasks = self._parse_plan_tasks()
-        verdict, total, conf = self._score_gate(plan_text, len(tasks), (self.project_path / "findings.md").exists())
-
-        template = self._home_skill(VALUE_GATE_TOOL) / "references" / "value-review-template.md"
-        content = template.read_text(encoding="utf-8") if template.exists() else "# value-review.md\n"
-        content = content.replace("- **Proposal:**", "- **Proposal:** TriadDev execution of current plan")
-        content = content.replace("- **Date:**", f"- **Date:** {datetime.now().date()}")
-        content = content.replace("- **Owner:**", "- **Owner:** codex")
-        content = content.replace("- **Verdict:** `GO | REVISE | NO-GO`", f"- **Verdict:** `{verdict}`")
-        content = content.replace("- **Total Score (0-30):**", f"- **Total Score (0-30):** {total}")
-        content = content.replace("- **Confidence:** `High | Medium | Low`", f"- **Confidence:** `{conf}`")
+        task_plan = self.project_path / "task_plan.md"
+        findings = self.project_path / "findings.md"
+        plan_text = task_plan.read_text(encoding="utf-8", errors="ignore") if task_plan.exists() else ""
+        tasks = self._parse_plan_tasks() if task_plan.exists() else []
+        has_findings = findings.exists() and len(findings.read_text(encoding="utf-8", errors="ignore").strip()) > 20
+        verdict, score, confidence = self._score_gate(plan_text=plan_text, task_count=len(tasks), has_findings=has_findings)
 
         review_file = self.project_path / "value-review.md"
-        review_file.write_text(content, encoding="utf-8")
+        review_file.write_text(
+            "# Value Gate Review\n\n"
+            f"- Verdict: **{verdict}**\n"
+            f"- Score: **{score}**\n"
+            f"- Confidence: **{confidence}**\n"
+            f"- Mode: **{mode}**\n"
+            f"- Generated at: {datetime.now().isoformat()}\n",
+            encoding="utf-8",
+        )
 
+        attempts = state.get("value_gate", {}).get("attempts", 0) + 1
         state["value_gate"] = {
-            "state": "passed" if verdict == "GO" else "blocked",
+            "mode": mode,
+            "state": "passed" if verdict == "GO" else "reviewed",
             "verdict": verdict,
-            "score": total,
-            "confidence": conf,
-            "reviewed_at": datetime.now().isoformat(),
+            "score": score,
+            "confidence": confidence,
             "review_file": str(review_file),
-            "attempts": int(state["value_gate"].get("attempts", 0)) + 1,
+            "attempts": attempts,
+            "last_checked_at": datetime.now().isoformat(),
+            "last_bypass": state.get("value_gate", {}).get("last_bypass"),
         }
         self._save_state(state)
-        self._set_phase("value-gate")
-        return {"success": verdict == "GO", "verdict": verdict, "score": total, "confidence": conf, "review_file": str(review_file)}
+        self._append_gate_audit({
+            "event": "gate-evaluated",
+            "mode": mode,
+            "verdict": verdict,
+            "score": score,
+            "confidence": confidence,
+            "attempt": attempts,
+        })
+        return {
+            "success": verdict == "GO",
+            "verdict": verdict,
+            "score": score,
+            "confidence": confidence,
+            "review_file": str(review_file),
+            "mode": mode,
+            "cached": False,
+        }
 
-    def _ensure_gate(self, force_gate: bool) -> bool:
-        if self._route == "core":
-            return True
+    def _ensure_gate(self, force_gate: bool, bypass_gate: bool = False, bypass_reason: str = "") -> bool:
         state = self._load_state()
-        if state.get("value_gate", {}).get("state") == "passed":
+        mode = state.get("value_gate", {}).get("mode", "advisory")
+
+        if mode == "disabled":
+            self._append_gate_audit({"event": "gate-skipped", "mode": mode, "reason": "mode_disabled"})
             return True
-        if state.get("value_gate", {}).get("state") == "blocked":
-            return self.run_value_gate(force=force_gate)["success"] if force_gate else False
-        return self.run_value_gate(force=force_gate)["success"]
+
+        gate = self.run_value_gate(force=force_gate)
+        verdict = gate.get("verdict")
+
+        if verdict == "GO":
+            return True
+
+        if mode == "advisory":
+            self._append_gate_audit({"event": "gate-advisory-allow", "mode": mode, "verdict": verdict})
+            return True
+
+        # enforced
+        if bypass_gate:
+            reason = (bypass_reason or "").strip()
+            if not reason:
+                self._append_gate_audit({"event": "gate-enforced-bypass-denied", "mode": mode, "verdict": verdict, "reason": "missing_bypass_reason"})
+                return False
+            state = self._load_state()
+            state["value_gate"]["last_bypass"] = {
+                "at": datetime.now().isoformat(),
+                "reason": reason,
+                "verdict": verdict,
+            }
+            self._save_state(state)
+            self._append_gate_audit({"event": "gate-enforced-bypass", "mode": mode, "verdict": verdict, "reason": reason})
+            return True
+
+        self._append_gate_audit({"event": "gate-enforced-block", "mode": mode, "verdict": verdict})
+        return False
+
     def _touch_spec(self, task_id: str) -> Path:
         path = self.project_path / "specs" / f"{task_id}.yaml"
         if not path.exists():
@@ -494,9 +579,9 @@ class TriadDevOrchestrator:
             )
         return path
 
-    def implement_task(self, task_id: str, force_gate: bool = False) -> ImplementationResult:
+    def implement_task(self, task_id: str, force_gate: bool = False, bypass_gate: bool = False, bypass_reason: str = "") -> ImplementationResult:
         self._ensure_config()
-        if not self._ensure_gate(force_gate=force_gate):
+        if not self._ensure_gate(force_gate=force_gate, bypass_gate=bypass_gate, bypass_reason=bypass_reason):
             return ImplementationResult(task_id=task_id, success=False)
 
         spec_path = self._touch_spec(task_id)
@@ -526,7 +611,7 @@ class TriadDevOrchestrator:
             spec_path=spec_path,
         )
 
-    def implement_all(self, force_gate: bool = False) -> WorkflowResult:
+    def implement_all(self, force_gate: bool = False, bypass_gate: bool = False, bypass_reason: str = "") -> WorkflowResult:
         self._ensure_config()
         if not self.workflow_path.exists():
             self.analyze_tasks()
@@ -540,7 +625,7 @@ class TriadDevOrchestrator:
 
         errors = []
         for task_id in pending:
-            result = self.implement_task(task_id, force_gate=force_gate)
+            result = self.implement_task(task_id, force_gate=force_gate, bypass_gate=bypass_gate, bypass_reason=bypass_reason)
             if not result.success:
                 errors.append(task_id + ": blocked by value gate")
                 break
@@ -559,10 +644,12 @@ class TriadDevOrchestrator:
 
         total = len(payload.get("tasks", []))
         done = set(state.get("implemented_tasks", []))
+        vg = state.get("value_gate", {})
         return ProjectStatus(
             name=cfg.name,
             current_phase=state.get("phase", "planning"),
             route=state.get("route", self._route),
+            value_gate_mode=vg.get("mode", cfg.value_gate_mode),
             total_tasks=total,
             completed_tasks=len(done),
             pending_tasks=max(0, total - len(done)),
@@ -570,7 +657,8 @@ class TriadDevOrchestrator:
             current_batch=1 if payload.get("batches") else 0,
             total_batches=len(payload.get("batches", [])),
             recent_activity=[
-                f"Gate: {state.get('value_gate', {}).get('verdict')}",
+                f"Gate mode: {vg.get('mode')}",
+                f"Gate verdict: {vg.get('verdict')}",
                 f"Route: {state.get('route')}",
                 f"Brownfield base spec generated: {state.get('brownfield', {}).get('base_spec_generated')}",
                 f"Active change: {state.get('active_change_id')}",
@@ -675,6 +763,7 @@ class TriadDevOrchestrator:
         state["active_change_id"] = change_id
         self._save_state(state)
         return self.project_path / "SPEC-delta.yaml"
+
     def create_proposal(self, intent: str, scopes: List[str]) -> Path:
         path = self.project_path / "artifacts" / "proposal.md"
         lines = [f"- {s}" for s in scopes] if scopes else ["- in: define scope", "- out: define boundary"]
@@ -792,7 +881,13 @@ class TriadDevOrchestrator:
         self._write_delta({"changes": changes})
         return {"merged": merged, "skipped": skipped, "total": len(changes)}
 
-    def run_full_workflow(self, from_phase: str = "plan", force_gate: bool = False) -> WorkflowResult:
+    def run_full_workflow(
+        self,
+        from_phase: str = "plan",
+        force_gate: bool = False,
+        bypass_gate: bool = False,
+        bypass_reason: str = "",
+    ) -> WorkflowResult:
         self._ensure_config()
 
         if from_phase == "analyze":
@@ -881,16 +976,16 @@ class TriadDevOrchestrator:
 
             if phase == "value-gate":
                 gate = self.run_value_gate(force=force_gate)
-                if not gate["success"]:
-                    errors.append(f"gate blocked: {gate['verdict']}")
-                    break
                 done.append("value-gate")
                 if gate.get("review_file"):
                     artifacts.append(gate["review_file"])
+                if self._load_state().get("value_gate", {}).get("mode") == "enforced" and gate.get("verdict") in {"REVISE", "NO-GO"} and not bypass_gate:
+                    errors.append(f"gate blocked: {gate['verdict']}")
+                    break
                 continue
 
             if phase == "implement":
-                impl = self.implement_all(force_gate=force_gate)
+                impl = self.implement_all(force_gate=force_gate, bypass_gate=bypass_gate, bypass_reason=bypass_reason)
                 if not impl.success:
                     errors.extend(impl.errors)
                     break
@@ -907,6 +1002,65 @@ class TriadDevOrchestrator:
         if errors:
             return WorkflowResult(False, done[-1] if done else "none", 0, errors, artifacts)
         return WorkflowResult(True, done[-1] if done else from_phase, 0, [], artifacts)
+
+    def stack_health(self) -> Dict[str, Any]:
+        checks: List[Dict[str, Any]] = []
+        for component, repo in STACK_COMPONENTS.items():
+            base = self._stack_skill_path(repo)
+            manifest = base / "contracts" / "stack-handshake.json"
+            status = "ok" if base.exists() and manifest.exists() else "missing"
+            checks.append({
+                "component": component,
+                "repo_path": str(base),
+                "manifest": str(manifest),
+                "status": status,
+            })
+        overall = "healthy" if all(c["status"] == "ok" for c in checks) else "degraded"
+        return {"status": overall, "checks": checks, "checked_at": datetime.now().isoformat()}
+
+    def stack_capabilities(self) -> Dict[str, Any]:
+        payload: Dict[str, Any] = {}
+        for component, repo in STACK_COMPONENTS.items():
+            payload[component] = self._read_manifest(repo)
+        return payload
+
+    def export_stack_state(self, output: Path) -> Path:
+        state = self._load_state()
+        cfg = self._ensure_config()
+        export = {
+            "exported_at": datetime.now().isoformat(),
+            "project": {
+                "path": str(self.project_path),
+                "name": cfg.name,
+                "route": cfg.mode,
+                "value_gate_mode": cfg.value_gate_mode,
+            },
+            "triadev": {
+                "state": state,
+                "workflow": json.loads(self.workflow_path.read_text(encoding="utf-8")) if self.workflow_path.exists() else None,
+                "status": {
+                    "phase": state.get("phase"),
+                    "implemented_tasks": state.get("implemented_tasks", []),
+                },
+            },
+            "contracts": self.stack_capabilities(),
+            "health": self.stack_health(),
+        }
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(json.dumps(export, indent=2, ensure_ascii=False), encoding="utf-8")
+        return output
+
+    def import_stack_state(self, input_file: Path):
+        payload = json.loads(input_file.read_text(encoding="utf-8"))
+        triadev = payload.get("triadev", {})
+        state = triadev.get("state")
+        if isinstance(state, dict):
+            state.setdefault("value_gate", self._default_value_gate_state(mode="advisory"))
+            self._save_state(state)
+        workflow = triadev.get("workflow")
+        if isinstance(workflow, dict):
+            self.workflow_path.parent.mkdir(parents=True, exist_ok=True)
+            self.workflow_path.write_text(json.dumps(workflow, indent=2, ensure_ascii=False), encoding="utf-8")
 
     def state_snapshot(self) -> Dict[str, Any]:
         self._ensure_config()

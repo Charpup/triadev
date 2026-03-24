@@ -1,0 +1,21 @@
+{
+  "contractVersion": "1.0.0",
+  "component": "triadev",
+  "interface": {
+    "health": "triadev status --verbose",
+    "capabilities": [
+      "route:core|extended|artifact|brownfield",
+      "workflow:plan|detect-specs|delta|artifact|implement|sync",
+      "gate-modes:disabled|advisory|enforced",
+      "stack-handshake"
+    ],
+    "export_state": "triadev stack-export-state --output <file>",
+    "import_state": "triadev stack-import-state --input <file>"
+  },
+  "compatibility": {
+    "planning-with-files": ">=2.0.0",
+    "task-workflow": ">=3.1.0",
+    "tdd-sdd-development": ">=1.0.0",
+    "value-first-gate": ">=1.0.0"
+  }
+}
