@@ -1,472 +1,218 @@
 ---
 name: triadev
 description: >-
-  TRIGGER: triadev, Golden Triangle, 三元开发, TriadDev, brownfield workflow, delta spec, OpenSpec.
-  TriadDev v2.1 uses Hybrid A-first progressive routing: default Core path for non-dev multi-step work
-  (planning, research, orchestration, DAG tracking) and Extended path for coding intents (implementation,
-  tests, spec/delta changes). Extended path requires value-first-gate review before TDD/SDD execution.
-  Use for structured multi-step projects; NOT for simple one-off edits.
+  TRIGGER: triadev, Golden Triangle, structured development, multi-step project,
+  brownfield workflow, delta spec, greenfield project.
+  TriaDev v3.0 orchestrates structured multi-step projects through two paths:
+  Core (planning + scheduling) for non-coding work, Extended (+ value-gate + TDD/SDD)
+  for implementation. Creates triadev-handoff.json to coordinate between
+  planning-with-files, task-workflow, and tdd-sdd-development.
+  Use for projects with 5+ tasks or cross-session work. NOT for single edits or quick fixes.
 ---
 
-# TriadDev 🜁 v2.1 - Golden Triangle Development
+# TriaDev v3.0 — Golden Triangle Orchestrator
 
-**Version:** 2.1.0 | **Author:** Galatea | **Homepage:** https://github.com/Charpup/triadev
-
-> **TriadDev** now uses a Hybrid A-first route: default **Core path** for non-dev orchestration, and escalated **Extended path** for coding with value + quality gates.
-
-## Quick Route (Core vs Extended)
-
-Use this at the start of every TriadDev task:
-
-| Intent | Route | Stack |
-|---|---|---|
-| Planning / research / orchestration / progress tracking (non-dev) | **Core (default)** | `planning-with-files` + `task-workflow` |
-| Implementation / refactor / tests / SPEC changes / skill coding | **Extended** | `planning-with-files` + `task-workflow` + `value-first-gate` + `tdd-sdd-development` |
-
-### Route Notice (must be explicit)
-- If no coding intent is explicit, route to **Core**.
-- If coding intent appears, escalate to **Extended** and announce why.
-
-```text
-Route Notice:
-- Routed to Core: no implementation/spec/test change requested.
-- Routed to Extended: implementation/spec/test intent detected.
-```
-
-### Extended Path Gate Rule
-Before entering TDD/SDD, run **Value-First Gate** and require verdict:
-- `GO` → continue to TDD/SDD
-- `REVISE` / `NO-GO` → hold implementation, return to planning/validation
-
-### Compatibility Guarantee
-Legacy TriadDev triggers and command examples remain valid (`triadev`, `Golden Triangle`, `三元开发`, brownfield, delta spec, OpenSpec).
-
-### skill-creator Usage Boundary (Important)
-`skill-creator` is **not** a core TriadDev dependency. Use it as an external specialist helper only when skill artifacts are in scope.
-
-Invoke `skill-creator` only if:
-- creating a new skill
-- editing/auditing `SKILL.md`
-- restructuring skill folders (`scripts/`, `references/`, `assets/`)
-
-Recommended handoff contract:
-- **Input:** intent, scope, examples, constraints, acceptance criteria
-- **Output:** changes summary, trigger spec, resource map, validation status, next actions
-
-## What's New in v2.1
-
-### 🆕 Brownfield Support
-Initialize projects from existing codebases:
-```bash
-triadev init-brownfield ./existing-project --name "Legacy Migration"
-```
-
-### 🆕 Delta Spec Integration
-Track changes to existing systems:
-```bash
-triadev delta --add "new feature" --modify "existing behavior"
-```
-
-### 🆕 Artifact Flow Mode
-OpenSpec-inspired full workflow:
-```bash
-triadev init "Complex Feature" --mode artifact
-# Creates: proposal → specs → design → tasks
-```
-
-### 🆕 Archive & Spec Evolution
-Complete changes and track spec history:
-```bash
-triadev archive "feature-name"
-# Merges deltas, moves to archive/, updates main specs
-```
-
-## The Golden Triangle v2.1
-
-```
-        📋 PLANNING
-       (planning-with-files)
-              ↓
-        📊 WORKFLOW
-       (task-workflow)
-              ↓
-     🚦 VALUE-FIRST GATE
-      (value-first-gate)
-              ↓ (GO only)
-         🧪 TDD/SDD
-     (tdd-sdd-development)
-```
-
-For non-dev tasks, stop at Planning + Workflow (Core path).
-
-## Workflow Modes
-
-### Mode A: Greenfield (Default) - New Projects
-For building from scratch:
-```bash
-triadev init "My Project" --template web
-triadev plan --objectives "API,Tests,Deploy"
-triadev analyze
-triadev implement --all
-triadev archive
-```
-
-### Mode B: Brownfield (NEW) - Existing Projects
-For working with existing code:
-```bash
-triadev init-brownfield ./existing-project --name "Migration"
-triadev detect-specs  # Auto-generate base specs
-triadev delta --add "new feature"
-triadev implement
-triadev archive
-```
-
-### Mode C: Artifact Flow (NEW) - Complex Projects
-For features needing design docs:
-```bash
-triadev init "Complex Feature" --mode artifact
-triadev propose "Add real-time sync"
-triadev spec  # Create from proposal
-triadev design  # Technical approach
-triadev tasks   # Implementation steps
-triadev implement
-triadev archive
-```
-
-## Quick Start
-
-### Core Path (Non-dev default)
-```bash
-# Initialize structured planning
-triadev init "Ops Project" --template workflow
-triadev plan --objectives "Research,Dependency DAG,Execution tracking"
-triadev analyze
-# Execute orchestration tasks (no coding gates)
-triadev run --from plan
-```
-
-### Greenfield Project (Extended path)
-```bash
-# Initialize
-triadev init "User Service API" --template api
-cd user-service-api
-
-# Plan
-triadev plan --objectives "Design schema,Implement CRUD,Add auth,Write tests"
-
-# Execute everything
-triadev run --from plan
-```
-
-### Brownfield Project (NEW)
-```bash
-# Initialize from existing code
-triadev init-brownfield ./legacy-app --name "Modernization"
-
-# Detect current specs
-triadev detect-specs
-
-# Plan changes
-triadev delta --add "OAuth support" --modify "session handling"
-
-# Execute
-triadev implement --all
-
-# Archive changes
-triadev archive "oauth-migration"
-```
-
-### Artifact Flow (NEW)
-```bash
-# Initialize with full artifacts
-triadev init "Payment System" --mode artifact
-
-# Create proposal
-triadev propose --intent "Add Stripe integration" \
-                --scope "in: payment processing" \
-                --scope "out: tax calculation"
-
-# Generate specs from proposal
-triadev spec --from-proposal
-
-# Create design doc
-triadev design --approach "Webhook-based async processing"
-
-# Create task list
-triadev tasks
-
-# Implement
-triadev implement --all
-
-# Archive
-triadev archive
-```
-
-## Commands Reference
-
-### Initialization Commands
-
-| Command | Description | Example |
-|---------|-------------|---------|
-| `init` | Initialize greenfield project | `triadev init "Name" --template web` |
-| `init-brownfield` | Initialize from existing code (NEW) | `triadev init-brownfield ./project` |
-| `propose` | Create proposal.md (artifact mode) | `triadev propose "intent"` |
-
-### Planning Commands
-
-| Command | Description | Example |
-|---------|-------------|---------|
-| `plan` | Create planning docs | `triadev plan --objectives "obj1,obj2"` |
-| `detect-specs` | Auto-generate specs from code (NEW) | `triadev detect-specs` |
-| `delta` | Create delta specs (NEW) | `triadev delta --add "feature"` |
-
-### Analysis Commands
-
-| Command | Description | Example |
-|---------|-------------|---------|
-| `analyze` | Analyze and schedule | `triadev analyze` |
-| `spec` | Generate specs (artifact mode) | `triadev spec --from-proposal` |
-| `design` | Create design.md (artifact mode) | `triadev design` |
-| `tasks` | Create tasks.md (artifact mode) | `triadev tasks` |
-
-### Implementation Commands
-
-| Command | Description | Example |
-|---------|-------------|---------|
-| `implement` | Run TDD workflow (Extended path) | `triadev implement task-001` |
-| `run` | Execute full workflow | `triadev run --from plan` |
-
-> Extended path rule: run Value-First Gate before `implement`; proceed only when verdict is `GO`.
-
-### Completion Commands (NEW)
-
-| Command | Description | Example |
-|---------|-------------|---------|
-| `archive` | Complete and archive change | `triadev archive "feature"` |
-| `sync` | Merge deltas to main specs | `triadev sync` |
-| `status` | Show project status | `triadev status --verbose` |
-
-## Project Structure
-
-### Greenfield Structure
-```
-my-project/
-├── triadev-project.json
-├── task_plan.md
-├── findings.md
-├── progress.md
-├── SPEC.yaml
-├── src/
-└── tests/
-```
-
-### Brownfield Structure (NEW)
-```
-my-project/
-├── triadev-project.json
-├── task_plan.md
-├── SPEC.yaml              # Base specs (auto-generated)
-├── SPEC-delta.yaml        # Current changes (NEW)
-├── changes/               # Change tracking (NEW)
-│   ├── active/
-│   │   └── oauth-migration/
-│   └── archive/
-│       └── 2026-02-25-oauth-migration/
-├── src/                   # Existing code
-└── tests/
-```
-
-### Artifact Mode Structure (NEW)
-```
-my-project/
-├── triadev-project.json
-├── task_plan.md
-├── artifacts/             # Current change artifacts
-│   ├── proposal.md
-│   ├── specs/
-│   ├── design.md
-│   └── tasks.md
-├── changes/
-│   └── archive/
-├── SPEC.yaml              # Main specs (source of truth)
-├── src/
-└── tests/
-```
-
-## Integration with tdd-sdd-development v2.0
-
-TriadDev v2.0 leverages new tdd-sdd features:
-
-### Brownfield Integration
-```python
-# TriadDev calls tdd-sdd v2.0
-tdd_sdd.init_brownfield(project_dir=".")
-tdd_sdd.create_delta_spec(...)
-tdd_sdd.archive_change(...)
-```
-
-### Artifact Flow Integration
-```python
-# TriadDev orchestrates artifact creation
-tdd_sdd.init_artifact_flow(skill_name="...")
-tdd_sdd.create_proposal(...)
-tdd_sdd.create_specs_from_proposal()
-tdd_sdd.create_design_doc()
-tdd_sdd.create_task_list()
-```
-
-### Delta Spec in Workflow
-```yaml
-# task_plan.md includes delta spec phases
-## Phase 1: Detect Base Specs (brownfield)
-## Phase 2: Create Delta Specs
-## Phase 3: Generate Tests
-## Phase 4: Implement Changes
-## Phase 5: Archive
-```
-
-## Configuration
-
-### Project Config (triadev-project.json)
-
-```json
-{
-  "name": "My Project",
-  "template": "web",
-  "mode": "greenfield",
-  "created_at": "2026-02-25T10:00:00",
-  "triadev_version": "2.0.0",
-  "tdd_sdd_version": "2.0.0"
-}
-```
-
-### Mode-Specific Config
-
-**Brownfield mode:**
-```json
-{
-  "mode": "brownfield",
-  "base_specs_generated": true,
-  "active_changes": ["oauth-migration"]
-}
-```
-
-**Artifact mode:**
-```json
-{
-  "mode": "artifact",
-  "artifacts": ["proposal", "specs", "design", "tasks"],
-  "current_artifact": "design"
-}
-```
-
-## Real-World Examples
-
-### Example 1: Greenfield API
-```bash
-triadev init "Payment API" --template api
-triadev plan --objectives "Design schema,Implement CRUD,Add Stripe,Write tests"
-triadev run --from plan
-```
-
-### Example 2: Brownfield Migration (NEW)
-```bash
-triadev init-brownfield ./legacy-auth --name "Auth Modernization"
-triadev detect-specs
-triadev delta --add "JWT support" --modify "session storage" --remove "legacy tokens"
-triadev analyze
-triadev implement --all
-triadev archive "auth-modernization"
-```
-
-### Example 3: Complex Feature with Artifacts (NEW)
-```bash
-triadev init "Real-time Sync" --mode artifact
-triadev propose --intent "Add WebSocket sync"
-triadev spec
-triadev design --approach "Event-driven with Redis"
-triadev tasks
-triadev implement task-001
-triadev implement task-002
-triadev verify
-triadev archive
-```
-
-## Migration from v1.x
-
-v1.x projects are **fully compatible** with v2.0:
-
-1. Update `triadev-project.json`:
-   ```json
-   {"triadev_version": "2.0.0"}
-   ```
-
-2. To use brownfield features:
-   ```bash
-   triadev init-brownfield . --name "Current Project"
-   ```
-
-3. To use artifact mode:
-   ```bash
-   triadev config mode artifact
-   ```
-
-No breaking changes - all v1.x commands continue to work.
+Coordinate structured multi-step projects by routing through the right skill stack
+and maintaining a shared handoff contract between skills.
 
 ## Dependencies
 
-TriadDev v2.0 requires:
+| Skill | Role | Required? |
+|-------|------|-----------|
+| planning-with-files | Persistent planning (task_plan.md, findings.md, progress.md) | Yes (Core + Extended) |
+| task-workflow | DAG scheduling, complexity scoring, batch ordering | Yes (Core + Extended) |
+| value-first-gate | GO/REVISE/NO-GO value assessment before implementation | Extended only |
+| tdd-sdd-development | TDD+SDD with SPEC.yaml and RED-GREEN-REFACTOR | Extended only |
 
-| Skill | Version | Purpose |
-|-------|---------|---------|
-| planning-with-files | >= 2.10.0 | File-based planning |
-| task-workflow | >= 3.0.0 | DAG scheduling |
-| tdd-sdd-development | >= 2.0.0 | TDD/SDD with delta specs |
+## Route Decision (First Step — Always Do This)
 
-## Troubleshooting
+Classify the user's intent before doing anything else:
 
-### Brownfield Detection Fails
-```bash
-# Manual spec generation
-triadev detect-specs --manual
+```
+Is there coding intent?
+(implementation, refactoring, tests, SPEC changes, new features)
+
+  YES → Extended Path
+  NO  → Core Path (default)
 ```
 
-### Delta Spec Conflicts
-```bash
-# Check for conflicts before archive
-triadev check-conflicts
+**Announce the route explicitly:**
+```
+Route: Core — no implementation intent detected.
+Route: Extended — coding intent detected (building a rate limiter module).
 ```
 
-### Artifact Mode Issues
-```bash
-# Reset to standard mode
-triadev config mode greenfield
+### Core Path (Non-Coding)
+For planning, research, orchestration, analysis, documentation.
+
+```
+Planning → Scheduling → Execute (research/analysis/writing) → Complete
 ```
 
-## Roadmap
+Skills used: planning-with-files + task-workflow
 
-- [x] Brownfield support (v2.0)
-- [x] Delta specs (v2.0)
-- [x] Artifact flow (v2.0)
-- [ ] Web UI for visual workflow
-- [ ] CI/CD pipeline integration
-- [ ] Multi-agent collaborative projects
+### Extended Path (Coding)
+For implementation, refactoring, testing, spec-driven development.
 
-## Acknowledgments
-
-- **OpenSpec** - Inspiration for delta specs and artifact flow
-- **planning-with-files** by OthmanAdi
-- **task-workflow** - DAG scheduling
-- **tdd-sdd-development v2.0** - Enhanced TDD/SDD
-- **Charpup** - Project sponsor
-- **Galatea** 🜁 - TriadDev architect
-
----
-
-**Build with the Golden Triangle v2.0!** 🚀
-
-```bash
-git clone https://github.com/Charpup/triadev.git ~/.openclaw/skills/triadev
-~/.openclaw/skills/triadev/install.sh
-triadev init "My Project" && triadev run
 ```
+Planning → Scheduling → Value Gate → TDD/SDD Cycles → Complete
+```
+
+Skills used: planning-with-files + task-workflow + value-first-gate + tdd-sdd-development
+
+**Gate rule:** Before entering TDD/SDD, value-first-gate must return `GO`.
+- `GO` → proceed to implementation
+- `REVISE` → return to planning, adjust scope
+- `NO-GO` → stop, explain why to user
+
+## Session Recovery
+
+**Before starting any work**, check for existing state:
+
+1. If `triadev-handoff.json` exists → read it, resume from `current_phase`
+2. If `task_plan.md` exists but no handoff.json → planning-with-files was used standalone; create handoff.json from plan state
+3. If neither exists → fresh start
+
+## Phase 1: Planning
+
+Delegate to **planning-with-files**:
+
+1. Create `task_plan.md` with phases and objectives (checkbox format)
+2. Create `findings.md` for research discoveries
+3. Create `progress.md` for session logging
+4. Follow planning-with-files rules (2-Action Rule, Read Before Decide, etc.)
+
+**After planning is complete**, extract tasks from task_plan.md:
+
+Parse checkbox items that represent actionable work units. For each, assign:
+- `id`: kebab-case identifier (e.g., `research-api-gateways`)
+- `name`: human-readable name
+- `complexity`: 1-10 score (1-3 simple, 4-6 moderate, 7-10 complex)
+- `dependencies`: list of task IDs this depends on
+
+Write the extracted tasks into `triadev-handoff.json` → `planning.tasks_extracted`.
+
+## Phase 2: Scheduling
+
+Delegate to **task-workflow**:
+
+1. Read `triadev-handoff.json` → `planning.tasks_extracted`
+2. Build DAG from task dependencies
+3. Sort by topological order, then by complexity (lower first)
+4. Group into execution batches (independent tasks in same batch)
+5. Write batch schedule to `triadev-handoff.json` → `scheduling.batches`
+
+## Phase 3: Value Gate (Extended Path Only)
+
+Delegate to **value-first-gate**:
+
+1. Run value assessment on the implementation scope
+2. Record verdict in `triadev-handoff.json` → `value_gate.verdict`
+3. If `GO`: proceed to Phase 4
+4. If `REVISE`: return to Phase 1 with narrowed scope
+5. If `NO-GO`: stop and explain
+
+## Phase 4: Implementation (Extended Path Only)
+
+Delegate to **tdd-sdd-development** for each task in batch order:
+
+1. Read current batch from `triadev-handoff.json` → `scheduling.batches`
+2. For each task:
+   a. Update `implementation.current` in handoff.json
+   b. Create/update SPEC.yaml for this task's requirements
+   c. Run full TDD cycle (RED → GREEN → REFACTOR) per tdd-sdd rules
+   d. On completion, move task to `implementation.completed`
+   e. Update corresponding checkbox in `task_plan.md`
+3. After all batches complete, set `current_phase` to `complete`
+
+## Phase 5: Completion
+
+1. Update all checkboxes in `task_plan.md`
+2. Log final summary in `progress.md`
+3. Set `triadev-handoff.json` → `current_phase` to `complete`
+4. If changes/ directory has active items, run archive
+
+## Handoff Contract
+
+The `triadev-handoff.json` file is the single source of truth for inter-skill state.
+See [references/handoff-contract.md](references/handoff-contract.md) for full schema.
+
+**Rules:**
+- Each skill reads and writes ONLY its section
+- triadev updates `current_phase` and coordinates transitions
+- planning-with-files does NOT read handoff.json (it manages its own files)
+- task-workflow reads `planning.tasks_extracted`, writes `scheduling.batches`
+- tdd-sdd reads `scheduling.batches`, writes `implementation.*`
+
+## Boundary Rules
+
+| File | Owner | Other skills may... |
+|------|-------|-------------------|
+| `task_plan.md` | planning-with-files | Read (task-workflow extracts tasks) |
+| `findings.md` | planning-with-files | Read only |
+| `progress.md` | planning-with-files | Append session entries |
+| `triadev-handoff.json` | triadev (coordinator) | Read/write own section |
+| `SPEC.yaml` | tdd-sdd | Read only (triadev, task-workflow) |
+| `.tdd-state.json` | tdd-sdd | Not accessed by others |
+
+## Project Structure
+
+### Core Path
+```
+project/
+├── task_plan.md            # Planning (planning-with-files)
+├── findings.md             # Research (planning-with-files)
+├── progress.md             # Session log (planning-with-files)
+└── triadev-handoff.json    # Orchestration state (triadev)
+```
+
+### Extended Path
+```
+project/
+├── task_plan.md
+├── findings.md
+├── progress.md
+├── triadev-handoff.json
+├── SPEC.yaml               # Specification (tdd-sdd)
+├── .tdd-state.json         # TDD cycle evidence (tdd-sdd)
+├── src/                    # Implementation
+├── tests/                  # Tests
+└── changes/                # Change tracking
+    ├── active/
+    └── archive/
+```
+
+## Brownfield Mode
+
+For existing codebases:
+1. Planning phase: assess current state, define what to change
+2. tdd-sdd creates delta specs (not full specs) via `delta_specs:` in SPEC.yaml
+3. Use `changes/active/{change-name}/` for tracking modifications
+4. Archive on completion to `changes/archive/`
+
+## Artifact Flow Mode
+
+For complex features needing design documents:
+1. Planning phase produces: `proposal.md` → `specs/` → `design.md` → `tasks.md`
+2. Each artifact lives in `artifacts/` directory
+3. Tasks extracted from `tasks.md` into handoff.json
+4. Normal scheduling + implementation follows
+
+## Anti-Patterns
+
+| Don't | Do Instead |
+|-------|-----------|
+| Skip route announcement | Always announce Core or Extended explicitly |
+| Start coding without handoff.json | Create handoff.json first, even for simple projects |
+| Let skills write to each other's files | Respect boundary rules above |
+| Skip value gate on Extended path | Always run value-first-gate before TDD |
+| Modify handoff.json without reading it first | Always read current state before writing |
+
+## When NOT to Use TriaDev
+
+- Single-file edits or quick fixes (< 5 tool calls)
+- Pure Q&A or explanation requests
+- Documentation-only changes with no research phase
+- Bug fixes that are already well-understood
+
+For these, just do the work directly without orchestration overhead.
