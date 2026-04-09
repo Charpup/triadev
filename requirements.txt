@@ -1,5 +1,0 @@
-# TriadDev Dependencies
-# Core dependencies are satisfied by sub-skills
-
-# Optional enhancements
-pyyaml>=5.4.0

@@ -2,48 +2,85 @@
   "skill_name": "triadev",
   "evals": [
     {
-      "id": 1,
-      "prompt": "Start a new project called 'payment-gateway' using triadev. I need to design the schema, implement Stripe integration, write tests, and deploy to production.",
-      "expected_output": "Runs 'triadev init payment-gateway --template api', creates triadev-project.json, task_plan.md, findings.md, progress.md, SPEC.yaml stub. Optionally runs triadev plan with the listed objectives.",
+      "id": "smoke-core-01",
+      "prompt": "I need to research 3 API gateway solutions (Kong, Tyk, AWS API Gateway), compare their pricing, scalability, and plugin ecosystems, then recommend one for a 50-person team. Plan this out and track my progress.",
+      "expected_output": "Routes to Core path. Creates task_plan.md with research phases, findings.md, progress.md. Creates triadev-handoff.json with route=core. Extracts research tasks and schedules them. No SPEC.yaml created.",
       "assertions": [
         {
-          "text": "Invokes triadev init",
-          "type": "contains_any",
-          "values": ["triadev init", "init", "payment-gateway", "triadev-project.json"]
+          "text": "Announces Core route explicitly",
+          "type": "llm_judge",
+          "criteria": "The response explicitly announces routing to Core path (not Extended), since this is a research task with no coding intent."
         },
         {
-          "text": "Golden Triangle is initialized (all three components)",
+          "text": "Creates planning files",
+          "type": "contains_any",
+          "values": ["task_plan.md", "findings.md", "progress.md"]
+        },
+        {
+          "text": "Creates handoff file with core route",
           "type": "llm_judge",
-          "criteria": "The response initializes planning-with-files (task_plan.md), task-workflow scheduling, and tdd-sdd-development (SPEC.yaml) as part of the Golden Triangle."
+          "criteria": "The response creates or mentions triadev-handoff.json with route set to core."
+        },
+        {
+          "text": "Does NOT create SPEC.yaml",
+          "type": "llm_judge",
+          "criteria": "No SPEC.yaml is created because this is a Core path (no implementation)."
         }
       ]
     },
     {
-      "id": 2,
-      "prompt": "I have an existing legacy e-commerce app at ~/projects/legacy-shop. Initialize triadev for brownfield development to modernize its checkout flow.",
-      "expected_output": "Runs 'triadev init-brownfield ~/projects/legacy-shop --name legacy-shop-modernization', detects existing code, generates base SPEC.yaml, prepares delta spec workflow for the checkout changes.",
+      "id": "smoke-extended-01",
+      "prompt": "Build a rate-limiter module for our Python API. Requirements: 100 requests per minute per user, Redis-backed persistence, sliding window algorithm. The module should be production-ready with tests.",
+      "expected_output": "Routes to Extended path. Creates planning files + triadev-handoff.json with route=extended. Runs value-first-gate before implementation. Creates SPEC.yaml and .tdd-state.json. Follows RED-GREEN-REFACTOR cycle.",
       "assertions": [
         {
-          "text": "Uses brownfield initialization",
-          "type": "contains_any",
-          "values": ["init-brownfield", "brownfield", "detect-specs", "legacy"]
+          "text": "Announces Extended route",
+          "type": "llm_judge",
+          "criteria": "The response explicitly announces routing to Extended path due to coding/implementation intent."
         },
         {
-          "text": "Base specs are generated from existing code",
+          "text": "Runs value gate before implementation",
           "type": "llm_judge",
-          "criteria": "The response includes a step to detect or auto-generate base specs from the existing codebase before proposing changes."
+          "criteria": "The response runs or mentions value-first-gate assessment before starting TDD/implementation."
+        },
+        {
+          "text": "Creates SPEC.yaml",
+          "type": "contains_any",
+          "values": ["SPEC.yaml", "spec", "specification"]
+        },
+        {
+          "text": "Follows TDD cycle",
+          "type": "llm_judge",
+          "criteria": "The response follows RED-GREEN-REFACTOR: writes tests first (RED), then implements (GREEN), then refactors."
         }
       ]
     },
     {
-      "id": 3,
-      "prompt": "Change the button color from blue to green in my React component.",
-      "expected_output": "Simple single-file CSS/style change. Skill should NOT trigger — no project orchestration needed.",
+      "id": "smoke-recovery-01",
+      "prompt": "I started a project yesterday. Here's my task_plan.md:\n\n# Task Plan: Auth Migration\n\n## Phase 1: Research\n- [x] Analyze current auth flow\n- [x] Compare JWT vs session tokens\n\n## Phase 2: Implementation\n- [ ] Create new auth middleware\n- [ ] Write migration script\n- [ ] Update API endpoints\n\nContinue from where I left off.",
+      "expected_output": "Detects existing task_plan.md. Creates triadev-handoff.json from current plan state (Phase 1 complete, Phase 2 pending). Routes to Extended (implementation tasks). Resumes from scheduling phase.",
       "assertions": [
         {
-          "text": "Does not invoke full triadev workflow for trivial UI change",
+          "text": "Detects existing plan state",
           "type": "llm_judge",
-          "criteria": "The response makes the color change directly without initializing triadev project structure, SPEC.yaml, or task scheduling."
+          "criteria": "The response recognizes that Phase 1 is complete and Phase 2 is pending, rather than starting from scratch."
+        },
+        {
+          "text": "Creates handoff from existing plan",
+          "type": "llm_judge",
+          "criteria": "The response creates triadev-handoff.json by extracting remaining tasks from the existing task_plan.md."
+        }
+      ]
+    },
+    {
+      "id": "smoke-negative-01",
+      "prompt": "Change the CSS margin from 10px to 20px in src/components/Header.css",
+      "expected_output": "Does NOT trigger triadev workflow. Makes the simple CSS change directly.",
+      "assertions": [
+        {
+          "text": "Does not invoke triadev",
+          "type": "llm_judge",
+          "criteria": "The response makes the CSS change directly without creating task_plan.md, triadev-handoff.json, SPEC.yaml, or any project orchestration files."
         }
       ]
     }

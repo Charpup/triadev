@@ -1,0 +1,27 @@
+{
+  "version": "1.0.0",
+  "project": "",
+  "route": "core",
+  "current_phase": "planning",
+  "planning": {
+    "status": "pending",
+    "files": [],
+    "tasks_extracted": []
+  },
+  "scheduling": {
+    "status": "pending",
+    "batches": []
+  },
+  "value_gate": {
+    "status": "pending",
+    "verdict": null,
+    "review_path": null
+  },
+  "implementation": {
+    "status": "pending",
+    "completed": [],
+    "current": null,
+    "spec_path": null,
+    "tdd_state_path": null
+  }
+}
