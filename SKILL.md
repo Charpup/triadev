@@ -129,8 +129,9 @@ Delegate to **tdd-sdd-development** for each task in batch order:
 
 1. Update all checkboxes in `task_plan.md`
 2. Log final summary in `progress.md`
-3. Set `triadev-handoff.json` → `current_phase` to `complete`
-4. If changes/ directory has active items, run archive
+3. **Before** setting `current_phase` to `complete`, invoke [`verification-before-completion`](../verification-before-completion/SKILL.md) skill to verify: (a) all tasks in `scheduling.batches` appear in `implementation.completed`, (b) `value_gate.verdict == "GO"` (Extended) or `skipped` (Core), (c) handoff.json re-reads cleanly after write and schema-validates
+4. Set `triadev-handoff.json` → `current_phase` to `complete`
+5. If changes/ directory has active items, run archive
 
 ## Handoff Contract
 
