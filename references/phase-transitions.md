@@ -182,3 +182,19 @@ TriaDev v3.1+ 采用**混合架构**：中央 orchestrator（triadev）协调跨
 - 纯去中心化（skill 自由互调）→ handoff.json 的"唯一 SoT"假设被破坏
 
 混合的代价是"需要规则文档"（本段）；收益是"两种优势兼得"。相关讨论见 `projects/superpowers-comparison/decision.md`。
+
+---
+
+## Optional Skill Integration Points（Round-3.2，按需激活）
+
+以下 skill **不在主流程强制触发**，但 agent / Bob 在特定场景下可考虑调用：
+
+| Skill | 适用场景 | 触发时机（建议） |
+|---|---|---|
+| [`using-git-worktrees`](../../using-git-worktrees/SKILL.md) | Brownfield refactor / breaking API change / 多分支并行开发 | Phase 4 实现**前**，若 task 涉及跨多个既有文件重写或会破坏主分支稳定性，考虑先创建隔离 worktree |
+
+**不强耦合的理由**：Round-2/3 共 8 次 PR 推送全部通过独立 `clone-per-repo` 机制（`tmp-upstream-sync/<repo>/`）完成，从未使用 git worktree；主流程强制触发会在无真实需求场景中产生认知税。保留为 optional 而非 required。
+
+**如何自发识别**：using-git-worktrees 的 SKILL.md 已定义 trigger 关键词（`create worktree` / `branch isolation` / `refactor in isolation` / `开分支` / `隔离工作区` 等），Claude Code agent 会在用户任务描述命中这些关键词时自发激活；agent 也可在判断 task 为高风险 change 时主动建议 Bob。
+
+未来其他 optional skill 可同样在此表添加条目。
