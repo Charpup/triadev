@@ -104,7 +104,7 @@
             { "type": "string", "enum": ["GO", "REVISE", "NO-GO"] },
             { "type": "null" }
           ],
-          "description": "Uppercase enum. null allowed only when status is 'pending' or 'skipped'."
+          "description": "Uppercase enum. null allowed only when status is 'pending' or 'skipped'. Coupling enforced via allOf rules below."
         },
         "review_path": {
           "oneOf": [
@@ -113,7 +113,29 @@
           ],
           "description": "Relative path to value-review.md, or null."
         }
-      }
+      },
+      "allOf": [
+        {
+          "$comment": "status=pending → verdict must be null",
+          "if": { "properties": { "status": { "const": "pending" } }, "required": ["status"] },
+          "then": { "properties": { "verdict": { "type": "null" } } }
+        },
+        {
+          "$comment": "status=skipped → verdict must be null (Core path)",
+          "if": { "properties": { "status": { "const": "skipped" } }, "required": ["status"] },
+          "then": { "properties": { "verdict": { "type": "null" } } }
+        },
+        {
+          "$comment": "status=passed → verdict must be GO",
+          "if": { "properties": { "status": { "const": "passed" } }, "required": ["status"] },
+          "then": { "properties": { "verdict": { "const": "GO" } } }
+        },
+        {
+          "$comment": "status=blocked → verdict must be REVISE or NO-GO",
+          "if": { "properties": { "status": { "const": "blocked" } }, "required": ["status"] },
+          "then": { "properties": { "verdict": { "enum": ["REVISE", "NO-GO"] } } }
+        }
+      ]
     },
     "implementation": {
       "type": "object",

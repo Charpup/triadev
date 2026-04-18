@@ -101,9 +101,9 @@
           "equals": "extended"
         },
         {
-          "text": "Only Phase 2 tasks extracted (not Phase 1 completed ones)",
+          "text": "Only Phase 2 tasks extracted (count-based, not ID-based)",
           "type": "llm_judge",
-          "criteria": "The triadev-handoff.json planning.tasks_extracted contains only the three Phase 2 tasks (auth-middleware, migration-script, api-endpoints) — NOT the completed Phase 1 items."
+          "criteria": "The triadev-handoff.json planning.tasks_extracted array has exactly 3 entries, one per Phase 2 checkbox ('Create new auth middleware', 'Write migration script', 'Update API endpoints'). Phase 1 completed items ('Analyze current auth flow', 'Compare JWT vs session tokens') must NOT appear. Exact task IDs are derivation-dependent — verify by task name meaning, not by literal kebab-case ID strings."
         },
         {
           "text": "Resumes from scheduling phase, not planning",
