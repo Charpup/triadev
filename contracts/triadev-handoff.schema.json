@@ -1,0 +1,177 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/Charpup/claude-workspace/schemas/triadev-handoff.schema.json",
+  "title": "TriaDev Handoff",
+  "description": "Inter-skill coordination contract between triadev, planning-with-files, task-workflow, value-first-gate, and tdd-sdd-development. Derived from references/handoff-contract.md and the empty-instance template in templates/triadev-handoff.json.",
+  "type": "object",
+  "required": ["version", "project", "route", "current_phase", "planning", "scheduling", "value_gate", "implementation"],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "type": "string",
+      "const": "1.0.0",
+      "description": "Schema version. Currently pinned to 1.0.0."
+    },
+    "project": {
+      "type": "string",
+      "description": "Project name / identifier. May be empty string for an uninitialized handoff."
+    },
+    "route": {
+      "type": "string",
+      "enum": ["core", "extended"],
+      "description": "Orchestration route. 'core' = non-coding (research/analysis/writing). 'extended' = coding (planning + scheduling + value-gate + TDD/SDD)."
+    },
+    "current_phase": {
+      "type": "string",
+      "enum": ["planning", "scheduling", "value-gate", "implementation", "complete"],
+      "description": "The phase currently being worked on or, for 'complete', the terminal state. See references/phase-transitions.md for legal transitions."
+    },
+    "planning": {
+      "type": "object",
+      "required": ["status", "files", "tasks_extracted"],
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["pending", "complete"]
+        },
+        "files": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Names of files produced by planning-with-files (typically task_plan.md, findings.md, progress.md)."
+        },
+        "tasks_extracted": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "name", "complexity", "dependencies"],
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-zA-Z][a-zA-Z0-9]*$",
+                "description": "kebab-case identifier or alphanumeric id (T1, T2, etc.)"
+              },
+              "name": { "type": "string", "minLength": 1 },
+              "complexity": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 10,
+                "description": "1-3 simple, 4-6 moderate, 7-10 complex"
+              },
+              "dependencies": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "Task ids this task depends on"
+              }
+            }
+          }
+        }
+      }
+    },
+    "scheduling": {
+      "type": "object",
+      "required": ["status", "batches"],
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["pending", "complete"]
+        },
+        "batches": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "One batch = array of task ids runnable in parallel"
+          },
+          "description": "Ordered list of batches. Batch N cannot start until batch N-1 completes."
+        }
+      }
+    },
+    "value_gate": {
+      "type": "object",
+      "required": ["status", "verdict", "review_path"],
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["pending", "passed", "blocked", "skipped"],
+          "description": "'skipped' for Core path (no value-gate applies). 'passed' means verdict=GO. 'blocked' means verdict=NO-GO."
+        },
+        "verdict": {
+          "oneOf": [
+            { "type": "string", "enum": ["GO", "REVISE", "NO-GO"] },
+            { "type": "null" }
+          ],
+          "description": "Uppercase enum. null allowed only when status is 'pending' or 'skipped'. Coupling enforced via allOf rules below."
+        },
+        "review_path": {
+          "oneOf": [
+            { "type": "string" },
+            { "type": "null" }
+          ],
+          "description": "Relative path to value-review.md, or null."
+        }
+      },
+      "allOf": [
+        {
+          "$comment": "status=pending → verdict must be null",
+          "if": { "properties": { "status": { "const": "pending" } }, "required": ["status"] },
+          "then": { "properties": { "verdict": { "type": "null" } } }
+        },
+        {
+          "$comment": "status=skipped → verdict must be null (Core path)",
+          "if": { "properties": { "status": { "const": "skipped" } }, "required": ["status"] },
+          "then": { "properties": { "verdict": { "type": "null" } } }
+        },
+        {
+          "$comment": "status=passed → verdict must be GO",
+          "if": { "properties": { "status": { "const": "passed" } }, "required": ["status"] },
+          "then": { "properties": { "verdict": { "const": "GO" } } }
+        },
+        {
+          "$comment": "status=blocked → verdict must be REVISE or NO-GO",
+          "if": { "properties": { "status": { "const": "blocked" } }, "required": ["status"] },
+          "then": { "properties": { "verdict": { "enum": ["REVISE", "NO-GO"] } } }
+        }
+      ]
+    },
+    "implementation": {
+      "type": "object",
+      "required": ["status", "completed", "current", "spec_path", "tdd_state_path"],
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["pending", "in_progress", "complete"],
+          "description": "Note the underscore in 'in_progress'. Do NOT use 'in-progress'."
+        },
+        "completed": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Task ids that have finished their TDD cycle."
+        },
+        "current": {
+          "oneOf": [
+            { "type": "string" },
+            { "type": "null" }
+          ],
+          "description": "Id of the task currently in its TDD cycle. null when status is 'pending' or 'complete'."
+        },
+        "spec_path": {
+          "oneOf": [
+            { "type": "string" },
+            { "type": "null" }
+          ]
+        },
+        "tdd_state_path": {
+          "oneOf": [
+            { "type": "string" },
+            { "type": "null" }
+          ]
+        }
+      }
+    }
+  }
+}

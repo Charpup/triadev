@@ -1,5 +1,17 @@
 {
   "skill_name": "triadev",
+  "eval_schema_version": "2.0",
+  "assertion_types_supported": {
+    "llm_judge": "Subjective check, prone to leniency. Use sparingly, only when structural checks cannot capture the requirement.",
+    "contains_any": "Deterministic. Response text must contain at least one of values[].",
+    "contains_all": "Deterministic. Response text must contain every value in values[].",
+    "does_not_contain": "Deterministic. Response text must not contain any value in values[].",
+    "file_exists": "Deterministic. Named file at path must exist after run.",
+    "no_file_exists": "Deterministic. Named file at path must NOT exist after run (for negative cases).",
+    "json_path_equals": "Deterministic. JSON at file has path (JSONPath) equal to expected value.",
+    "json_path_in": "Deterministic. JSON at file has path whose value is one of values[].",
+    "json_schema_valid": "Deterministic. JSON at file validates against schema_path (relative to skill root)."
+  },
   "evals": [
     {
       "id": "smoke-core-01",
@@ -8,23 +20,35 @@
       "assertions": [
         {
           "text": "Announces Core route explicitly",
-          "type": "llm_judge",
-          "criteria": "The response explicitly announces routing to Core path (not Extended), since this is a research task with no coding intent."
+          "type": "contains_all",
+          "values": ["Core", "Route"]
         },
         {
-          "text": "Creates planning files",
-          "type": "contains_any",
-          "values": ["task_plan.md", "findings.md", "progress.md"]
+          "text": "Does not announce Extended route",
+          "type": "does_not_contain",
+          "values": ["Route: Extended", "Extended Path"]
         },
         {
-          "text": "Creates handoff file with core route",
-          "type": "llm_judge",
-          "criteria": "The response creates or mentions triadev-handoff.json with route set to core."
+          "text": "Creates planning trio",
+          "type": "file_exists",
+          "path": "task_plan.md"
+        },
+        {
+          "text": "Creates handoff file",
+          "type": "file_exists",
+          "path": "triadev-handoff.json"
+        },
+        {
+          "text": "Handoff route is core",
+          "type": "json_path_equals",
+          "file": "triadev-handoff.json",
+          "path": "$.route",
+          "equals": "core"
         },
         {
           "text": "Does NOT create SPEC.yaml",
-          "type": "llm_judge",
-          "criteria": "No SPEC.yaml is created because this is a Core path (no implementation)."
+          "type": "no_file_exists",
+          "path": "SPEC.yaml"
         }
       ]
     },
@@ -34,24 +58,33 @@
       "expected_output": "Routes to Extended path. Creates planning files + triadev-handoff.json with route=extended. Runs value-first-gate before implementation. Creates SPEC.yaml and .tdd-state.json. Follows RED-GREEN-REFACTOR cycle.",
       "assertions": [
         {
-          "text": "Announces Extended route",
-          "type": "llm_judge",
-          "criteria": "The response explicitly announces routing to Extended path due to coding/implementation intent."
+          "text": "Announces Extended route explicitly",
+          "type": "contains_all",
+          "values": ["Extended", "Route"]
         },
         {
-          "text": "Runs value gate before implementation",
-          "type": "llm_judge",
-          "criteria": "The response runs or mentions value-first-gate assessment before starting TDD/implementation."
+          "text": "Handoff route is extended",
+          "type": "json_path_equals",
+          "file": "triadev-handoff.json",
+          "path": "$.route",
+          "equals": "extended"
         },
         {
           "text": "Creates SPEC.yaml",
-          "type": "contains_any",
-          "values": ["SPEC.yaml", "spec", "specification"]
+          "type": "file_exists",
+          "path": "SPEC.yaml"
+        },
+        {
+          "text": "Runs value gate before implementation",
+          "type": "json_path_in",
+          "file": "triadev-handoff.json",
+          "path": "$.value_gate.status",
+          "values": ["passed", "blocked"]
         },
         {
           "text": "Follows TDD cycle",
           "type": "llm_judge",
-          "criteria": "The response follows RED-GREEN-REFACTOR: writes tests first (RED), then implements (GREEN), then refactors."
+          "criteria": "The response follows RED-GREEN-REFACTOR: writes tests first (RED), then implements (GREEN), then refactors. Does not write implementation before tests."
         }
       ]
     },
@@ -61,14 +94,23 @@
       "expected_output": "Detects existing task_plan.md. Creates triadev-handoff.json from current plan state (Phase 1 complete, Phase 2 pending). Routes to Extended (implementation tasks). Resumes from scheduling phase.",
       "assertions": [
         {
-          "text": "Detects existing plan state",
-          "type": "llm_judge",
-          "criteria": "The response recognizes that Phase 1 is complete and Phase 2 is pending, rather than starting from scratch."
+          "text": "Handoff created with extended route",
+          "type": "json_path_equals",
+          "file": "triadev-handoff.json",
+          "path": "$.route",
+          "equals": "extended"
         },
         {
-          "text": "Creates handoff from existing plan",
+          "text": "Only Phase 2 tasks extracted (count-based, not ID-based)",
           "type": "llm_judge",
-          "criteria": "The response creates triadev-handoff.json by extracting remaining tasks from the existing task_plan.md."
+          "criteria": "The triadev-handoff.json planning.tasks_extracted array has exactly 3 entries, one per Phase 2 checkbox ('Create new auth middleware', 'Write migration script', 'Update API endpoints'). Phase 1 completed items ('Analyze current auth flow', 'Compare JWT vs session tokens') must NOT appear. Exact task IDs are derivation-dependent — verify by task name meaning, not by literal kebab-case ID strings."
+        },
+        {
+          "text": "Resumes from scheduling phase, not planning",
+          "type": "json_path_in",
+          "file": "triadev-handoff.json",
+          "path": "$.current_phase",
+          "values": ["scheduling", "value-gate", "implementation"]
         }
       ]
     },
@@ -78,9 +120,137 @@
       "expected_output": "Does NOT trigger triadev workflow. Makes the simple CSS change directly.",
       "assertions": [
         {
-          "text": "Does not invoke triadev",
+          "text": "No handoff file created",
+          "type": "no_file_exists",
+          "path": "triadev-handoff.json"
+        },
+        {
+          "text": "No planning trio created",
+          "type": "no_file_exists",
+          "path": "task_plan.md"
+        },
+        {
+          "text": "No SPEC.yaml created",
+          "type": "no_file_exists",
+          "path": "SPEC.yaml"
+        }
+      ]
+    },
+    {
+      "id": "lifecycle-handoff-01",
+      "prompt": "Start a new Extended-path project: build a URL shortener module. Walk through all phases of the handoff file lifecycle — creation, planning update, scheduling update, value gate, implementation, and completion. Show the handoff.json at each major transition.",
+      "expected_output": "Handoff file transitions through all phases in order: planning → scheduling → value-gate → implementation → complete. Each transition preserves prior section data.",
+      "assertions": [
+        {
+          "text": "Handoff ends in complete phase",
+          "type": "json_path_equals",
+          "file": "triadev-handoff.json",
+          "path": "$.current_phase",
+          "equals": "complete"
+        },
+        {
+          "text": "Planning status is complete",
+          "type": "json_path_equals",
+          "file": "triadev-handoff.json",
+          "path": "$.planning.status",
+          "equals": "complete"
+        },
+        {
+          "text": "Scheduling has at least one batch",
           "type": "llm_judge",
-          "criteria": "The response makes the CSS change directly without creating task_plan.md, triadev-handoff.json, SPEC.yaml, or any project orchestration files."
+          "criteria": "triadev-handoff.json scheduling.batches is a non-empty array of arrays (at least one batch with at least one task)."
+        },
+        {
+          "text": "Implementation completed list is non-empty",
+          "type": "llm_judge",
+          "criteria": "triadev-handoff.json implementation.completed contains at least one task ID."
+        },
+        {
+          "text": "Final handoff validates against schema",
+          "type": "json_schema_valid",
+          "file": "triadev-handoff.json",
+          "schema_path": "contracts/triadev-handoff.schema.json"
+        }
+      ]
+    },
+    {
+      "id": "clear-recovery-01",
+      "prompt": "My previous session was cleared mid-flow. Here's the existing triadev-handoff.json:\n\n```json\n{\n  \"version\": \"1.0.0\",\n  \"project\": \"auth-api\",\n  \"route\": \"extended\",\n  \"current_phase\": \"implementation\",\n  \"planning\": {\"status\": \"complete\", \"files\": [\"task_plan.md\", \"findings.md\", \"progress.md\"], \"tasks_extracted\": [{\"id\": \"create-schema\", \"name\": \"Create DB schema\", \"complexity\": 3, \"dependencies\": []}, {\"id\": \"impl-model\", \"name\": \"Implement user model\", \"complexity\": 5, \"dependencies\": [\"create-schema\"]}, {\"id\": \"write-tests\", \"name\": \"Write integration tests\", \"complexity\": 6, \"dependencies\": [\"impl-model\"]}]},\n  \"scheduling\": {\"status\": \"complete\", \"batches\": [[\"create-schema\"], [\"impl-model\"], [\"write-tests\"]]},\n  \"value_gate\": {\"status\": \"passed\", \"verdict\": \"GO\", \"review_path\": \"value-review.md\"},\n  \"implementation\": {\"status\": \"in_progress\", \"completed\": [\"create-schema\"], \"current\": \"impl-model\", \"spec_path\": \"SPEC.yaml\", \"tdd_state_path\": \".tdd-state.json\"}\n}\n```\n\nResume from where I left off.",
+      "expected_output": "Detects handoff at implementation.current=impl-model. Does NOT restart planning or scheduling. Continues implementation of impl-model via tdd-sdd.",
+      "assertions": [
+        {
+          "text": "Does not restart planning",
+          "type": "does_not_contain",
+          "values": ["Phase 1: Planning", "creating task_plan.md", "extracting tasks"]
+        },
+        {
+          "text": "Does not rerun value gate",
+          "type": "does_not_contain",
+          "values": ["running value-first-gate", "new value assessment"]
+        },
+        {
+          "text": "Resumes on impl-model specifically",
+          "type": "contains_any",
+          "values": ["impl-model", "Implement user model"]
+        },
+        {
+          "text": "Enters TDD cycle for current task",
+          "type": "llm_judge",
+          "criteria": "The response continues with RED-GREEN-REFACTOR cycle for the impl-model task (reads existing SPEC.yaml, writes tests first, etc.)."
+        }
+      ]
+    },
+    {
+      "id": "phase-transition-illegal-01",
+      "prompt": "Here's a broken handoff file:\n\n```json\n{\n  \"version\": \"1.0.0\",\n  \"project\": \"test\",\n  \"route\": \"extended\",\n  \"current_phase\": \"implementation\",\n  \"planning\": {\"status\": \"pending\", \"files\": [], \"tasks_extracted\": []},\n  \"scheduling\": {\"status\": \"pending\", \"batches\": []},\n  \"value_gate\": {\"status\": \"pending\", \"verdict\": null, \"review_path\": null},\n  \"implementation\": {\"status\": \"pending\", \"completed\": [], \"current\": null, \"spec_path\": null, \"tdd_state_path\": null}\n}\n```\n\nThe phase is set to `implementation` but planning is still pending. Diagnose and fix.",
+      "expected_output": "Detects illegal state (current_phase=implementation but planning.status=pending). Refuses to proceed with implementation. Either rolls phase back to 'planning' or reports the inconsistency.",
+      "assertions": [
+        {
+          "text": "Detects illegal phase state",
+          "type": "contains_any",
+          "values": ["illegal", "invalid", "inconsistent", "planning is pending", "cannot proceed", "must complete planning"]
+        },
+        {
+          "text": "Does NOT start writing implementation code",
+          "type": "does_not_contain",
+          "values": ["RED phase", "writing tests for", "implementing the"]
+        },
+        {
+          "text": "Proposes rollback or repair",
+          "type": "llm_judge",
+          "criteria": "The response either rolls current_phase back to 'planning' in the handoff file, or stops and explicitly asks the user how to resolve the inconsistent state."
+        }
+      ]
+    },
+    {
+      "id": "schema-validation-01",
+      "prompt": "Create a fresh triadev-handoff.json for a new Core-path research project called 'mobile-landscape-2026'. After creation, validate it against the handoff schema in contracts/triadev-handoff.schema.json.",
+      "expected_output": "Creates a valid handoff.json that passes schema validation. All required fields present with correct types.",
+      "assertions": [
+        {
+          "text": "Handoff file exists",
+          "type": "file_exists",
+          "path": "triadev-handoff.json"
+        },
+        {
+          "text": "Project name is set correctly",
+          "type": "json_path_equals",
+          "file": "triadev-handoff.json",
+          "path": "$.project",
+          "equals": "mobile-landscape-2026"
+        },
+        {
+          "text": "Route is core",
+          "type": "json_path_equals",
+          "file": "triadev-handoff.json",
+          "path": "$.route",
+          "equals": "core"
+        },
+        {
+          "text": "Validates against schema",
+          "type": "json_schema_valid",
+          "file": "triadev-handoff.json",
+          "schema_path": "contracts/triadev-handoff.schema.json"
         }
       ]
     }

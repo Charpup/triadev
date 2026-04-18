@@ -135,7 +135,15 @@ Delegate to **tdd-sdd-development** for each task in batch order:
 ## Handoff Contract
 
 The `triadev-handoff.json` file is the single source of truth for inter-skill state.
-See [references/handoff-contract.md](references/handoff-contract.md) for full schema.
+
+**Three files define the handoff**:
+
+| File | Purpose | When to load |
+|------|---------|--------------|
+| [contracts/triadev-handoff.schema.json](contracts/triadev-handoff.schema.json) | Machine-readable JSON Schema for programmatic validation | Before writing handoff.json — validate after each write |
+| [templates/triadev-handoff.json](templates/triadev-handoff.json) | Empty-instance template | At project init — copy as starting point |
+| [references/handoff-contract.md](references/handoff-contract.md) | Human-readable schema explanation + ownership rules | When authoring or reviewing handoff logic |
+| [references/phase-transitions.md](references/phase-transitions.md) | Legal phase transitions + canonical field values | **Always load before advancing `current_phase` or any `*.status` field** (drift-prevention) |
 
 **Rules:**
 - Each skill reads and writes ONLY its section
@@ -143,6 +151,12 @@ See [references/handoff-contract.md](references/handoff-contract.md) for full sc
 - planning-with-files does NOT read handoff.json (it manages its own files)
 - task-workflow reads `planning.tasks_extracted`, writes `scheduling.batches`
 - tdd-sdd reads `scheduling.batches`, writes `implementation.*`
+
+## Working Examples
+
+See [examples/d-to-x-migration-partial/](examples/d-to-x-migration-partial/) for a
+real (BRONZE-labeled) mid-flow Core-path project — useful reference for handoff field
+shapes when `current_phase=scheduling` and `value_gate.status=skipped`.
 
 ## Boundary Rules
 
