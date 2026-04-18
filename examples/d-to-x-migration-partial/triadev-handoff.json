@@ -1,0 +1,45 @@
+{
+  "version": "1.0.0",
+  "project": "d-to-x-migration",
+  "route": "core",
+  "current_phase": "scheduling",
+  "planning": {
+    "status": "complete",
+    "files": ["task_plan.md", "findings.md", "progress.md"],
+    "tasks_extracted": [
+      {"id": "stage-a-commit",      "name": "git commit Stage A 痕迹",                       "complexity": 2, "dependencies": []},
+      {"id": "stage-b-copy-session", "name": "复制 D-- session JSONL → X-- 目录",              "complexity": 3, "dependencies": ["stage-a-commit"]},
+      {"id": "stage-b-verify",       "name": "验证 claude --resume 可见历史",                   "complexity": 2, "dependencies": ["stage-b-copy-session"]},
+      {"id": "stage-b-observe",      "name": "观察 1 周不删 D-- 副本",                          "complexity": 1, "dependencies": ["stage-b-verify"]},
+      {"id": "stage-c-brainstorm",   "name": "kb-distillation /brainstorm (3 角色)",          "complexity": 5, "dependencies": ["stage-a-commit"]},
+      {"id": "stage-c-decide",       "name": "输出 decision.md (GO/REVISE/NO-GO)",            "complexity": 3, "dependencies": ["stage-c-brainstorm"]},
+      {"id": "stage-c-execute",      "name": "根据决策执行后续",                                "complexity": 4, "dependencies": ["stage-c-decide"]},
+      {"id": "stage-d-grep-replace", "name": "Grep 全局替换 D:\\ClaudeCodeWorkspace 引用",       "complexity": 4, "dependencies": ["stage-a-commit"]},
+      {"id": "stage-d-verify",       "name": "验证启动协议 + skill 触发正常",                   "complexity": 3, "dependencies": ["stage-d-grep-replace"]},
+      {"id": "stage-d-rename",       "name": "D:\\ClaudeCodeWorkspace\\ 改名 archived",         "complexity": 2, "dependencies": ["stage-d-verify"]},
+      {"id": "stage-d-push",         "name": "git push 到 Charpup/claude-workspace",          "complexity": 2, "dependencies": ["stage-d-rename"]}
+    ]
+  },
+  "scheduling": {
+    "status": "pending",
+    "batches": [
+      ["stage-a-commit"],
+      ["stage-b-copy-session", "stage-c-brainstorm", "stage-d-grep-replace"],
+      ["stage-b-verify", "stage-c-decide", "stage-d-verify"],
+      ["stage-b-observe", "stage-c-execute", "stage-d-rename"],
+      ["stage-d-push"]
+    ]
+  },
+  "value_gate": {
+    "status": "skipped",
+    "verdict": null,
+    "review_path": null
+  },
+  "implementation": {
+    "status": "pending",
+    "completed": [],
+    "current": null,
+    "spec_path": null,
+    "tdd_state_path": null
+  }
+}
